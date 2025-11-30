@@ -1,6 +1,4 @@
 __pycache__/
 *.pyc
 .ipynb_checkpoints/
-release_data/
-release_data.tar.gz
 .DS_Store

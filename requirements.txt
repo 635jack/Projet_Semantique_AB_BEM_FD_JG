@@ -1,8 +1,0 @@
-pandas
-numpy
-nltk
-spacy
-scikit-learn
-transformers
-torch
-jupyter

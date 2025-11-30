@@ -1,0 +1,91 @@
+{
+  "metadata": {
+    "n_documents": 306,
+    "tfidf_shape": [
+      306,
+      5000
+    ],
+    "n_features": 5000,
+    "preprocessing_steps": [
+      "1. Lowercase",
+      "2. Suppression caractères spéciaux",
+      "3. Normalisation espaces",
+      "4. Tokenization (NLTK)",
+      "5. POS Tagging (NLTK)",
+      "6. Lemmatization (spaCy)",
+      "7. TF-IDF sur textes lemmatisés (max_features=5000, ngram_range=(1,2))"
+    ]
+  },
+  "documents": [
+    {
+      "doc_id": "000f90380d768a85e2316225854fc377c079b5c4",
+      "raw_text_preview": "Full - Resolution Residual Networks for Semantic Segmentation in Street Scenes section : Abstract Semantic image segmentation is an essential component of modern autonomous driving systems , as an acc",
+      "cleaned_text_preview": "full resolution residual networks for semantic segmentation in street scenes section abstract semantic image segmentation is an essential component of modern autonomous driving systems as an accurate ",
+      "lemmatized_text_preview": "full resolution residual network for semantic segmentation in street scene section abstract semantic image segmentation be an essential component of modern autonomous driving system as an accurate und",
+      "tfidf_vector_index": 0
+    },
+    {
+      "doc_id": "0012de6bec1f25599e4f02517637e531a71909b9",
+      "raw_text_preview": "document : V - Net : Fully Convolutional Neural Networks for Volumetric Medical Image Segmentation Convolutional Neural Networks ( CNNs ) have been recently employed to solve problems from both the co",
+      "cleaned_text_preview": "document v net fully convolutional neural networks for volumetric medical image segmentation convolutional neural networks cnns have been recently employed to solve problems from both the computer vis",
+      "lemmatized_text_preview": "document v net fully convolutional neural network for volumetric medical image segmentation convolutional neural network cnn have be recently employ to solve problem from both the computer vision and ",
+      "tfidf_vector_index": 1
+    },
+    {
+      "doc_id": "007ab5528b3bd310a80d553cccad4b78dc496b02",
+      "raw_text_preview": "document : Bi - Directional Attention Flow for Machine Comprehension Machine comprehension ( MC ) , answering a query about a given context paragraph , requires modeling complex interactions between t",
+      "cleaned_text_preview": "document bi directional attention flow for machine comprehension machine comprehension mc answering a query about a given context paragraph requires modeling complex interactions between the context a",
+      "lemmatized_text_preview": "document bi directional attention flow for machine comprehension machine comprehension mc answer a query about a give context paragraph require model complex interaction between the context and the qu",
+      "tfidf_vector_index": 2
+    },
+    {
+      "doc_id": "0095c269e7d0c990249312687fc43521019809c4",
+      "raw_text_preview": "document : Modelling Interaction of Sentence Pair with Coupled - LSTMs Recently , there is rising interest in modelling the interactions of two sentences with deep neural networks . However , most of ",
+      "cleaned_text_preview": "document modelling interaction of sentence pair with coupled lstms recently there is rising interest in modelling the interactions of two sentences with deep neural networks however most of the existi",
+      "lemmatized_text_preview": "document modelling interaction of sentence pair with couple lstms recently there be rise interest in model the interaction of two sentence with deep neural network however most of the exist method enc",
+      "tfidf_vector_index": 3
+    },
+    {
+      "doc_id": "00b1cdc5bd77bf27f9b1ca630365eeeb456913b4",
+      "raw_text_preview": "document : Mastering Chess and Shogi by Self - Play with a General Reinforcement Learning Algorithm The game of chess is the most widely - studied domain in the history of artificial intelligence . Th",
+      "cleaned_text_preview": "document mastering chess and shogi by self play with a general reinforcement learning algorithm the game of chess is the most widely studied domain in the history of artificial intelligence the strong",
+      "lemmatized_text_preview": "document mastering chess and shogi by self play with a general reinforcement learn algorithm the game of chess be the most widely study domain in the history of artificial intelligence the strong prog",
+      "tfidf_vector_index": 4
+    },
+    {
+      "doc_id": "01125e3c68edb420b8d884ff53fb38d9fbe4f2b8",
+      "raw_text_preview": "document : Large Pose 3D Face Reconstruction from a Single Image via Direct Volumetric CNN Regression 3D face reconstruction is a fundamental Computer Vision problem of extraordinary difficulty . Curr",
+      "cleaned_text_preview": "document large pose 3d face reconstruction from a single image via direct volumetric cnn regression 3d face reconstruction is a fundamental computer vision problem of extraordinary difficulty current ",
+      "lemmatized_text_preview": "document large pose 3d face reconstruction from a single image via direct volumetric cnn regression 3d face reconstruction be a fundamental computer vision problem of extraordinary difficulty current ",
+      "tfidf_vector_index": 5
+    },
+    {
+      "doc_id": "0116899fce00ffa4afee08b505300bb3968faf9f",
+      "raw_text_preview": "Long Text Generation via Adversarial Training with Leaked Information section : Abstract Automatically generating coherent and semantically meaningful text has many applications in machine translation",
+      "cleaned_text_preview": "long text generation via adversarial training with leaked information section abstract automatically generating coherent and semantically meaningful text has many applications in machine translation d",
+      "lemmatized_text_preview": "long text generation via adversarial training with leak information section abstract automatically generate coherent and semantically meaningful text have many application in machine translation dialo",
+      "tfidf_vector_index": 6
+    },
+    {
+      "doc_id": "0171bdeb1c6e333287be655c667cfba5edb89b76",
+      "raw_text_preview": "Aggregated Residual Transformations for Deep Neural Networks section : Abstract We present a simple , highly modularized network architecture for image classification . Our network is constructed by r",
+      "cleaned_text_preview": "aggregated residual transformations for deep neural networks section abstract we present a simple highly modularized network architecture for image classification our network is constructed by repeati",
+      "lemmatized_text_preview": "aggregate residual transformation for deep neural network section abstract we present a simple highly modularize network architecture for image classification our network be construct by repeat a buil",
+      "tfidf_vector_index": 7
+    },
+    {
+      "doc_id": "01959ef569f74c286956024866c1d107099199f7",
+      "raw_text_preview": "VQA : Visual Question Answering section : Abstract - We propose the task of free - form and open - ended Visual Question Answering ( VQA ) . Given an image and a natural language question about the im",
+      "cleaned_text_preview": "vqa visual question answering section abstract we propose the task of free form and open ended visual question answering vqa given an image and a natural language question about the image the task is ",
+      "lemmatized_text_preview": "vqa visual question answer section abstract we propose the task of free form and open ended visual question answer vqa give an image and a natural language question about the image the task be to prov",
+      "tfidf_vector_index": 8
+    },
+    {
+      "doc_id": "01c824989d24a8cae214c3156edd9d4492faa579",
+      "raw_text_preview": "document : Stacked Generative Adversarial Networks In this paper , we propose a novel generative model named Stacked Generative Adversarial Networks ( SGAN ) , which is trained to invert the hierarchi",
+      "cleaned_text_preview": "document stacked generative adversarial networks in this paper we propose a novel generative model named stacked generative adversarial networks sgan which is trained to invert the hierarchical repres",
+      "lemmatized_text_preview": "document stack generative adversarial network in this paper we propose a novel generative model name stack generative adversarial network sgan which be train to invert the hierarchical representation ",
+      "tfidf_vector_index": 9
+    }
+  ]
+}
