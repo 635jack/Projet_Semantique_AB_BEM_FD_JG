@@ -1,0 +1,469 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[french]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+
+\geometry{margin=2.5cm}
+
+% Configuration des liens
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=cyan,
+    pdftitle={Rapport Partie A - Preprocessing NER},
+    pdfauthor={Jacques Gastebois},
+}
+
+% Configuration du code
+\lstset{
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    frame=single,
+    backgroundcolor=\color{gray!10},
+    keywordstyle=\color{blue},
+    commentstyle=\color{green!50!black},
+    stringstyle=\color{red},
+}
+
+% En-tête et pied de page
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{Partie A : Preprocessing}
+\lhead{Projet Sémantique}
+\cfoot{\thepage}
+
+\title{\textbf{Projet Knowledge Extraction from Unstructured Text}\\
+\large Partie A : Preprocessing et Représentation Textuelle\\
+\vspace{0.5cm}
+\normalsize Rapport Technique}
+
+\author{
+Jacques Gastebois\\
+\small Master 2 VMI - Université Paris Cité\\
+\small IFLCE085 - Recherche et extraction sémantique à partir de texte\\
+\small Prof. Salima Benbernou
+}
+
+\date{6 Décembre 2025}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Ce rapport présente la méthodologie complète de preprocessing appliquée à un dataset NER (Named Entity Recognition) de 2221 phrases annotées. Le pipeline implémenté comprend le nettoyage, la lemmatization et la vectorisation TF-IDF. Les données sont divisées en ensembles Train/Dev/Test (70/15/15) et exportées dans des formats exploitables pour la Partie B du projet.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+\section{Introduction}
+
+\subsection{Contexte du Projet}
+Ce projet s'inscrit dans le cadre du cours IFLCE085 et vise à développer un système complet d'extraction de connaissances à partir de textes. La Partie A se concentre sur le preprocessing et la préparation des données.
+
+\subsection{Objectifs}
+\begin{itemize}
+    \item Charger et analyser le dataset NER (2221 phrases)
+    \item Diviser les données en ensembles Train/Dev/Test
+    \item Appliquer un pipeline NLP complet (nettoyage, lemmatization)
+    \item Générer des représentations vectorielles TF-IDF
+    \item Exporter les résultats dans des formats réutilisables pour la Partie B
+\end{itemize}
+
+\subsection{Dataset}
+\textbf{NER Dataset} (Named Entity Recognition) : Dataset de 2221 phrases annotées pour la reconnaissance d'entités nommées.
+
+\textbf{Structure du fichier source} (\texttt{data.csv}) :
+\begin{itemize}
+    \item \texttt{id} : Identifiant unique de la phrase
+    \item \texttt{words} : Liste des mots tokenisés (format array)
+    \item \texttt{ner\_tags} : Tags NER (0=O, 1=B-LOC, 2=B-PER, 4=B-ORG)
+    \item \texttt{text} : Texte brut de la phrase
+\end{itemize}
+
+\textbf{Split des données} :
+\begin{itemize}
+    \item \textbf{Train} : 1554 phrases (70\%)
+    \item \textbf{Dev} : 333 phrases (15\%)
+    \item \textbf{Test} : 334 phrases (15\%)
+\end{itemize}
+
+\section{Méthodologie}
+
+\subsection{Pipeline de Preprocessing}
+
+Le pipeline suit une approche séquentielle en 3 étapes principales :
+
+\begin{enumerate}[label=\textbf{Étape \arabic*:}]
+    \item \textbf{Nettoyage et Normalisation}
+    \begin{itemize}
+        \item Conversion en lowercase
+        \item Suppression des caractères spéciaux (garde lettres, chiffres, espaces)
+        \item Normalisation des espaces multiples
+    \end{itemize}
+    
+    \item \textbf{Lemmatization}
+    \begin{itemize}
+        \item Outil : spaCy \texttt{en\_core\_web\_sm}
+        \item Réduction des mots à leur forme canonique
+        \item \textbf{Appliqué sur TOUTES les phrases (Train, Dev, Test)}
+    \end{itemize}
+    
+    \item \textbf{Vectorisation TF-IDF}
+    \begin{itemize}
+        \item Outil : scikit-learn \texttt{TfidfVectorizer}
+        \item \textbf{Apprentissage (fit)} sur le Train set uniquement
+        \item \textbf{Transformation} appliquée sur Train, Dev et Test
+        \item Paramètres : \texttt{max\_features=3000}, \texttt{ngram\_range=(1,2)}
+    \end{itemize}
+\end{enumerate}
+
+\subsection{Justification des Choix Techniques}
+
+\subsubsection{Split Train/Dev/Test}
+La division 70/15/15 est un standard en machine learning qui garantit :
+\begin{itemize}
+    \item Suffisamment de données d'entraînement (1554 phrases)
+    \item Des ensembles de validation et test représentatifs (333-334 phrases)
+    \item Une évaluation fiable des performances
+\end{itemize}
+
+\subsubsection{Lemmatization}
+La lemmatization a été préférée au stemming car elle produit des formes linguistiquement correctes (ex: "better" $\rightarrow$ "good" au lieu de "bett").
+
+\subsubsection{TF-IDF sur Textes Lemmatisés}
+Le TF-IDF est calculé sur les textes lemmatisés pour garantir :
+\begin{itemize}
+    \item Une réduction du vocabulaire (formes canoniques)
+    \item Une meilleure capture des concepts sémantiques
+    \item Une cohérence avec le pipeline NLP complet
+\end{itemize}
+
+\subsubsection{Nombre de Features}
+3000 features (au lieu de 5000 pour SciREX) car :
+\begin{itemize}
+    \item Dataset plus petit (2221 vs 438 documents)
+    \item Phrases courtes (vs articles scientifiques complets)
+    \item Meilleur ratio features/documents
+\end{itemize}
+
+\section{Implémentation}
+
+\subsection{Technologies Utilisées}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Librairie} & \textbf{Version/Utilisation} \\ \midrule
+Python & 3.12 \\
+pandas & 2.2.2 (manipulation de données) \\
+numpy & 2.0.2 (calculs numériques) \\
+spaCy & 3.8.11 (lemmatization) \\
+scikit-learn & 1.6.1 (TF-IDF, train\_test\_split) \\
+scipy & 1.16.3 (matrices sparse) \\ \bottomrule
+\end{tabular}
+\caption{Stack technologique}
+\end{table}
+
+\subsection{Exemple de Code}
+
+\subsubsection{Chargement et Split}
+\begin{lstlisting}[language=Python]
+import pandas as pd
+from sklearn.model_selection import train_test_split
+
+# Chargement
+df = pd.read_csv('data.csv')
+
+# Split 70/15/15
+train_df, temp_df = train_test_split(df, test_size=0.3, random_state=42)
+dev_df, test_df = train_test_split(temp_df, test_size=0.5, random_state=42)
+\end{lstlisting}
+
+\subsubsection{Fonction de Nettoyage}
+\begin{lstlisting}[language=Python]
+def clean_text(text):
+    """Nettoie le texte."""
+    if not isinstance(text, str):
+        return ""
+    
+    # 1. Lowercase
+    text = text.lower()
+    
+    # 2. Suppression caracteres speciaux
+    text = re.sub(r'[^a-z0-9\s]', ' ', text)
+    
+    # 3. Normalisation espaces
+    text = re.sub(r'\s+', ' ', text).strip()
+    
+    return text
+\end{lstlisting}
+
+\subsubsection{Lemmatization avec spaCy}
+\begin{lstlisting}[language=Python]
+def lemmatize_text(text):
+    """Lemmatise le texte avec spaCy."""
+    doc = nlp(text)
+    lemmas = [token.lemma_ for token in doc]
+    return ' '.join(lemmas)
+
+# Application
+train_df['lemmatized_text'] = train_df['cleaned_text'].apply(lemmatize_text)
+\end{lstlisting}
+
+\subsubsection{Vectorisation TF-IDF}
+\begin{lstlisting}[language=Python]
+# Preparation des textes LEMMATISES
+train_texts = train_df['lemmatized_text'].tolist()
+dev_texts = dev_df['lemmatized_text'].tolist()
+test_texts = test_df['lemmatized_text'].tolist()
+
+# Vectorisation
+tfidf_vectorizer = TfidfVectorizer(
+    max_features=3000,
+    min_df=2,
+    max_df=0.8,
+    ngram_range=(1, 2)
+)
+
+# Fit sur TRAIN, transform sur tous
+tfidf_train = tfidf_vectorizer.fit_transform(train_texts)
+tfidf_dev = tfidf_vectorizer.transform(dev_texts)
+tfidf_test = tfidf_vectorizer.transform(test_texts)
+\end{lstlisting}
+
+\section{Résultats}
+
+\subsection{Statistiques du Preprocessing}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{@{}lr@{}}
+\toprule
+\textbf{Métrique} & \textbf{Valeur} \\ \midrule
+Total de phrases & 2221 \\
+Phrases train & 1554 (70\%) \\
+Phrases dev & 333 (15\%) \\
+Phrases test & 334 (15\%) \\
+Features TF-IDF & 3000 \\
+Taille matrice train & 1554 × 3000 \\
+Taille matrice dev & 333 × 3000 \\
+Taille matrice test & 334 × 3000 \\
+Densité moyenne & $\sim$15-20\% \\ \bottomrule
+\end{tabular}
+\caption{Statistiques de preprocessing}
+\end{table}
+
+\subsection{Exemple de Transformation}
+
+\textbf{Texte original :}
+\begin{quote}
+\textit{"When Aeneas later traveled to Hades , he called to her ghost but she neither spoke to nor acknowledged him ."}
+\end{quote}
+
+\textbf{Texte nettoyé :}
+\begin{quote}
+\textit{"when aeneas later traveled to hades he called to her ghost but she neither spoke to nor acknowledged him"}
+\end{quote}
+
+\textbf{Texte lemmatisé :}
+\begin{quote}
+\textit{"when aeneas later travel to hade he call to her ghost but she neither speak to nor acknowledge he"}
+\end{quote}
+
+\section{Export des Données}
+
+\subsection{Fichiers Générés}
+
+Tous les fichiers sont exportés dans le dossier \texttt{preprocessed\_data/} :
+
+\begin{table}[h]
+\centering
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Fichier} & \textbf{Format} & \textbf{Taille estimée} \\ \midrule
+\texttt{train\_preprocessed.csv} & CSV & $\sim$2 MB \\
+\texttt{dev\_preprocessed.csv} & CSV & $\sim$0.5 MB \\
+\texttt{test\_preprocessed.csv} & CSV & $\sim$0.5 MB \\
+\texttt{tfidf\_matrix.npz} & NumPy sparse & $\sim$0.5 MB \\
+\texttt{tfidf\_matrix\_dev.npz} & NumPy sparse & $\sim$0.1 MB \\
+\texttt{tfidf\_matrix\_test.npz} & NumPy sparse & $\sim$0.1 MB \\
+\texttt{tfidf\_vectorizer.pkl} & Pickle & $\sim$0.2 MB \\
+\texttt{tfidf\_feature\_names.npy} & NumPy & $\sim$0.05 MB \\
+\texttt{metadata.json} & JSON & $\sim$0.01 MB \\ \bottomrule
+\end{tabular}
+\caption{Fichiers exportés}
+\end{table}
+
+\subsection{Structure des CSV}
+
+Les fichiers CSV contiennent 4 colonnes :
+\begin{itemize}
+    \item \texttt{id} : Identifiant unique de la phrase
+    \item \texttt{text} : Texte original
+    \item \texttt{cleaned\_text} : Texte nettoyé
+    \item \texttt{lemmatized\_text} : Texte lemmatisé
+\end{itemize}
+
+\section{Utilisation pour la Partie B}
+
+\subsection{Chargement des Données}
+
+\subsubsection{Textes Prétraités}
+\begin{lstlisting}[language=Python]
+import pandas as pd
+
+# Charger les CSV
+df_train = pd.read_csv('preprocessed_data/train_preprocessed.csv')
+df_dev = pd.read_csv('preprocessed_data/dev_preprocessed.csv')
+df_test = pd.read_csv('preprocessed_data/test_preprocessed.csv')
+
+# Acceder aux differentes versions
+lemmatized_texts = df_train['lemmatized_text']
+\end{lstlisting}
+
+\subsubsection{Matrices TF-IDF}
+\begin{lstlisting}[language=Python]
+from scipy.sparse import load_npz
+import pickle
+import numpy as np
+
+# Charger les matrices TF-IDF
+tfidf_train = load_npz('preprocessed_data/tfidf_matrix.npz')
+tfidf_dev = load_npz('preprocessed_data/tfidf_matrix_dev.npz')
+tfidf_test = load_npz('preprocessed_data/tfidf_matrix_test.npz')
+
+# Charger le vectoriseur (pour transformer de nouveaux textes)
+with open('preprocessed_data/tfidf_vectorizer.pkl', 'rb') as f:
+    vectorizer = pickle.load(f)
+
+# Charger les noms de features
+feature_names = np.load('preprocessed_data/tfidf_feature_names.npy')
+
+# Transformer un nouveau texte
+new_text = ["your new text here"]
+new_vector = vectorizer.transform(new_text)
+\end{lstlisting}
+
+\subsubsection{Métadonnées}
+\begin{lstlisting}[language=Python]
+import json
+
+# Charger les metadonnees
+with open('preprocessed_data/metadata.json', 'r') as f:
+    metadata = json.load(f)
+
+# Acceder aux informations
+n_train = metadata['train_size']
+n_features = metadata['tfidf_features']
+\end{lstlisting}
+
+\subsection{Recommandations pour la Partie B}
+
+\begin{enumerate}
+    \item \textbf{Utiliser les textes lemmatisés} pour toute analyse sémantique
+    \item \textbf{Réutiliser le vectoriseur TF-IDF} pour transformer de nouveaux documents
+    \item \textbf{Exploiter les matrices sparse} pour économiser la mémoire
+    \item \textbf{Respecter le split Train/Dev/Test} pour l'évaluation
+\end{enumerate}
+
+\section{Accès aux Ressources}
+
+\subsection{Liens Importants}
+
+\begin{itemize}
+    \item \textbf{GitHub Repository :} \\
+    \url{https://github.com/635jack/Projet_Semantique_AB_BEM_FD_JG}
+    
+    \item \textbf{Google Colab Notebook :} \\
+    \url{https://colab.research.google.com/github/635jack/Projet_Semantique_AB_BEM_FD_JG/blob/master/PartieA_Preprocessing.ipynb}
+\end{itemize}
+
+\subsection{Instructions d'Exécution}
+
+\subsubsection{Sur Google Colab}
+\begin{enumerate}
+    \item Ouvrir le lien Colab ci-dessus
+    \item Uploader le fichier \texttt{data.csv}
+    \item Exécuter toutes les cellules : \texttt{Runtime $\rightarrow$ Run all}
+    \item Télécharger les fichiers exportés depuis \texttt{preprocessed\_data/}
+\end{enumerate}
+
+\subsubsection{En Local}
+\begin{enumerate}
+    \item Cloner le repository : \\
+    \texttt{git clone https://github.com/635jack/Projet\_Semantique\_AB\_BEM\_FD\_JG}
+    \item Installer Jupyter : \\
+    \texttt{pip install jupyter}
+    \item Exécuter le notebook : \\
+    \texttt{jupyter notebook PartieA\_Preprocessing.ipynb}
+\end{enumerate}
+
+\section{Conclusion}
+
+\subsection{Résumé des Contributions}
+
+Ce travail a permis de :
+\begin{itemize}
+    \item Implémenter un pipeline NLP complet et efficace
+    \item Traiter l'intégralité du dataset NER (2221 phrases)
+    \item Créer un split Train/Dev/Test reproductible
+    \item Générer des représentations vectorielles de haute qualité
+    \item Exporter les résultats dans des formats standardisés
+\end{itemize}
+
+\subsection{Points Clés}
+
+\begin{enumerate}
+    \item \textbf{Pipeline simplifié} : Nettoyage $\rightarrow$ Lemmatization $\rightarrow$ TF-IDF
+    \item \textbf{Split stratégique} : 70/15/15 avec \texttt{random\_state=42}
+    \item \textbf{TF-IDF sur textes lemmatisés} : Garantit la cohérence du preprocessing
+    \item \textbf{3000 features} : Adapté à la taille du dataset
+    \item \textbf{Formats réutilisables} : CSV, NPZ, Pickle, JSON
+\end{enumerate}
+
+\subsection{Perspectives pour la Partie B}
+
+Les données préparées sont prêtes pour :
+\begin{itemize}
+    \item Extraction d'entités nommées (NER)
+    \item Classification de textes
+    \item Clustering sémantique
+    \item Analyse de relations
+    \item Modèles d'embeddings avancés
+\end{itemize}
+
+\section*{Annexes}
+
+\subsection*{A. Commandes Utiles}
+
+\textbf{Vérifier la taille des fichiers :}
+\begin{lstlisting}[language=bash]
+ls -lh preprocessed_data/
+\end{lstlisting}
+
+\textbf{Compter les lignes des CSV :}
+\begin{lstlisting}[language=bash]
+wc -l preprocessed_data/*.csv
+\end{lstlisting}
+
+\subsection*{B. Dépendances}
+
+Les dépendances sont installées automatiquement dans le notebook :
+\begin{itemize}
+    \item pandas, numpy, nltk, spacy, scikit-learn, scipy
+    \item Modèle spaCy : \texttt{en\_core\_web\_sm}
+\end{itemize}
+
+\end{document}
