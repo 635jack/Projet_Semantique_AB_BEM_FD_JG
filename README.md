@@ -13,47 +13,50 @@
 
 ## Description du Projet
 
-Ce projet vise à développer un système complet d'extraction de connaissances à partir de textes scientifiques non structurés, en utilisant le dataset **SciREX** (Scientific Information Extraction).
+Ce projet vise à développer un système complet d'extraction de connaissances à partir de textes, en utilisant un dataset **NER (Named Entity Recognition)** de 2221 phrases annotées.
 
 ## Partie A : Preprocessing et Représentation Textuelle
+
+### Dataset
+
+- **Source** : NER Dataset (Named Entity Recognition)
+- **Total** : 2221 phrases
+- **Split** : Train (70%), Dev (15%), Test (15%)
+- **Colonnes** : `id`, `words`, `ner_tags`, `text`
 
 ### Pipeline Complet
 
 1. **Nettoyage** : Lowercase, suppression caractères spéciaux, normalisation espaces
-2. **Tokenization** : NLTK `word_tokenize`
-3. **POS Tagging** : NLTK `pos_tag`
-4. **Lemmatization** : spaCy `en_core_web_sm` (306 documents)
-5. **Vectorisation TF-IDF** : scikit-learn (matrice 306×5000)
+2. **Lemmatization** : spaCy `en_core_web_sm`
+3. **Vectorisation TF-IDF** : scikit-learn (3000 features, bigrammes)
 
 ### Fichiers Principaux
 
-- **`PartieA_Preprocessing.ipynb`** : Notebook Jupyter complet avec tous les résultats
-- **`Rapport_PartieA.pdf`** : Rapport technique LaTeX (10 pages)
-- **`Rapport_PartieA.tex`** : Source LaTeX du rapport
+- **`PartieA_Preprocessing.ipynb`** : Notebook Jupyter complet
+- **`data.csv`** : Dataset source (2221 phrases)
 - **`preprocessed_data/`** : Données exportées (CSV, NPZ, Pickle, JSON)
-- **`release_data/`** : Dataset SciREX original
 
 ### Données Exportées
 
-| Fichier | Description | Taille |
-|---------|-------------|--------|
-| `train_preprocessed.csv` | Textes TRAIN prétraités | 25.7 MB |
-| `dev_preprocessed.csv` | Textes DEV prétraités | ~4 MB |
-| `test_preprocessed.csv` | Textes TEST prétraités | ~4 MB |
-| `tfidf_matrix.npz` | Matrice TF-IDF TRAIN | 1.97 MB |
-| `tfidf_matrix_dev.npz` | Matrice TF-IDF DEV | ~0.4 MB |
-| `tfidf_matrix_test.npz` | Matrice TF-IDF TEST | ~0.4 MB |
-| `tfidf_vectorizer.pkl` | Vectoriseur TF-IDF entraîné | 0.19 MB |
-| `tfidf_feature_names.npy` | Noms des 5000 features | 0.06 MB |
-| `correspondence_dict.json` | Métadonnées et correspondances | 0.01 MB |
+| Fichier | Description | Taille estimée |
+|---------|-------------|----------------|
+| `train_preprocessed.csv` | Textes TRAIN prétraités (1554 phrases) | ~2 MB |
+| `dev_preprocessed.csv` | Textes DEV prétraités (333 phrases) | ~0.5 MB |
+| `test_preprocessed.csv` | Textes TEST prétraités (334 phrases) | ~0.5 MB |
+| `tfidf_matrix.npz` | Matrice TF-IDF TRAIN (sparse) | ~0.5 MB |
+| `tfidf_matrix_dev.npz` | Matrice TF-IDF DEV (sparse) | ~0.1 MB |
+| `tfidf_matrix_test.npz` | Matrice TF-IDF TEST (sparse) | ~0.1 MB |
+| `tfidf_vectorizer.pkl` | Vectoriseur TF-IDF entraîné | ~0.2 MB |
+| `tfidf_feature_names.npy` | Noms des 3000 features | ~0.05 MB |
+| `metadata.json` | Métadonnées du preprocessing | ~0.01 MB |
 
 ### Statistiques
 
-- **Documents train** : 306 (tous lemmatisés)
-- **Documents dev** : 66
-- **Documents test** : 66
-- **Features TF-IDF** : 5000
-- **Densité matrice** : 23.7%
+- **Phrases train** : 1554 (70%)
+- **Phrases dev** : 333 (15%)
+- **Phrases test** : 334 (15%)
+- **Features TF-IDF** : 3000
+- **Pipeline** : Nettoyage → Lemmatization → TF-IDF
 
 ## Utilisation
 
@@ -62,8 +65,9 @@ Ce projet vise à développer un système complet d'extraction de connaissances 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/635jack/Projet_Semantique_AB_BEM_FD_JG/blob/master/PartieA_Preprocessing.ipynb)
 
 1. Cliquez sur le badge ci-dessus
-2. Exécutez toutes les cellules : `Runtime → Run all`
-3. Les données seront automatiquement téléchargées et traitées
+2. Uploadez le fichier `data.csv` dans Colab
+3. Exécutez toutes les cellules : `Runtime → Run all`
+4. Téléchargez les fichiers exportés depuis `preprocessed_data/`
 
 ### En Local
 
@@ -93,7 +97,7 @@ from scipy.sparse import load_npz
 df_train = pd.read_csv('preprocessed_data/train_preprocessed.csv')
 df_dev = pd.read_csv('preprocessed_data/dev_preprocessed.csv')
 
-# Charger la matrice TF-IDF
+# Charger les matrices TF-IDF
 tfidf_train = load_npz('preprocessed_data/tfidf_matrix.npz')
 tfidf_dev = load_npz('preprocessed_data/tfidf_matrix_dev.npz')
 
@@ -109,15 +113,6 @@ feature_names = np.load('preprocessed_data/tfidf_feature_names.npy')
 
 - **GitHub Repository** : [https://github.com/635jack/Projet_Semantique_AB_BEM_FD_JG](https://github.com/635jack/Projet_Semantique_AB_BEM_FD_JG)
 - **Google Colab** : [Ouvrir le notebook](https://colab.research.google.com/github/635jack/Projet_Semantique_AB_BEM_FD_JG/blob/master/PartieA_Preprocessing.ipynb)
-- **Dataset SciREX** : [https://github.com/allenai/SciREX](https://github.com/allenai/SciREX)
-
-## Documentation
-
-Consultez le **[Rapport_PartieA.pdf](Rapport_PartieA.pdf)** pour une documentation technique complète incluant :
-- Méthodologie détaillée
-- Justification des choix techniques
-- Exemples de code
-- Instructions d'utilisation pour la Partie B
 
 ## Licence
 
