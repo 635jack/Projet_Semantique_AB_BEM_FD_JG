@@ -282,7 +282,11 @@ Tous les fichiers sont exportés dans le dossier \texttt{preprocessed\_data/} :
 \toprule
 \textbf{Fichier} & \textbf{Format} & \textbf{Taille} \\ \midrule
 \texttt{train\_preprocessed.csv} & CSV & 20.26 MB \\
+\texttt{dev\_preprocessed.csv} & CSV & $\sim$4 MB \\
+\texttt{test\_preprocessed.csv} & CSV & $\sim$4 MB \\
 \texttt{tfidf\_matrix.npz} & NumPy sparse & 1.96 MB \\
+\texttt{tfidf\_matrix\_dev.npz} & NumPy sparse & $\sim$0.4 MB \\
+\texttt{tfidf\_matrix\_test.npz} & NumPy sparse & $\sim$0.4 MB \\
 \texttt{tfidf\_vectorizer.pkl} & Pickle & 0.19 MB \\
 \texttt{tfidf\_feature\_names.npy} & NumPy & 0.06 MB \\
 \texttt{correspondence\_dict.json} & JSON & 0.01 MB \\ \bottomrule
@@ -308,13 +312,15 @@ Le fichier \texttt{train\_preprocessed.csv} contient 4 colonnes :
 \begin{lstlisting}[language=Python]
 import pandas as pd
 
-# Charger le CSV
-df = pd.read_csv('preprocessed_data/train_preprocessed.csv')
+# Charger les CSV
+df_train = pd.read_csv('preprocessed_data/train_preprocessed.csv')
+df_dev = pd.read_csv('preprocessed_data/dev_preprocessed.csv')
+df_test = pd.read_csv('preprocessed_data/test_preprocessed.csv')
 
 # Acceder aux differentes versions
-raw_texts = df['raw_text']
-cleaned_texts = df['cleaned_text']
-lemmatized_texts = df['lemmatized_text']
+raw_texts = df_train['raw_text']
+cleaned_texts = df_train['cleaned_text']
+lemmatized_texts = df_train['lemmatized_text']
 \end{lstlisting}
 
 \subsubsection{Matrice TF-IDF}
@@ -323,8 +329,10 @@ from scipy.sparse import load_npz
 import pickle
 import numpy as np
 
-# Charger la matrice TF-IDF
-tfidf_matrix = load_npz('preprocessed_data/tfidf_matrix.npz')
+# Charger les matrices TF-IDF
+tfidf_train = load_npz('preprocessed_data/tfidf_matrix.npz')
+tfidf_dev = load_npz('preprocessed_data/tfidf_matrix_dev.npz')
+tfidf_test = load_npz('preprocessed_data/tfidf_matrix_test.npz')
 
 # Charger le vectoriseur (pour transformer de nouveaux textes)
 with open('preprocessed_data/tfidf_vectorizer.pkl', 'rb') as f:

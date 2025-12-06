@@ -37,8 +37,12 @@ Ce projet vise à développer un système complet d'extraction de connaissances 
 
 | Fichier | Description | Taille |
 |---------|-------------|--------|
-| `train_preprocessed.csv` | Textes bruts, nettoyés et lemmatisés | 25.7 MB |
-| `tfidf_matrix.npz` | Matrice TF-IDF (sparse) | 1.97 MB |
+| `train_preprocessed.csv` | Textes TRAIN prétraités | 25.7 MB |
+| `dev_preprocessed.csv` | Textes DEV prétraités | ~4 MB |
+| `test_preprocessed.csv` | Textes TEST prétraités | ~4 MB |
+| `tfidf_matrix.npz` | Matrice TF-IDF TRAIN | 1.97 MB |
+| `tfidf_matrix_dev.npz` | Matrice TF-IDF DEV | ~0.4 MB |
+| `tfidf_matrix_test.npz` | Matrice TF-IDF TEST | ~0.4 MB |
 | `tfidf_vectorizer.pkl` | Vectoriseur TF-IDF entraîné | 0.19 MB |
 | `tfidf_feature_names.npy` | Noms des 5000 features | 0.06 MB |
 | `correspondence_dict.json` | Métadonnées et correspondances | 0.01 MB |
@@ -86,10 +90,12 @@ import pickle
 from scipy.sparse import load_npz
 
 # Charger les textes prétraités
-df = pd.read_csv('preprocessed_data/train_preprocessed.csv')
+df_train = pd.read_csv('preprocessed_data/train_preprocessed.csv')
+df_dev = pd.read_csv('preprocessed_data/dev_preprocessed.csv')
 
 # Charger la matrice TF-IDF
-tfidf_matrix = load_npz('preprocessed_data/tfidf_matrix.npz')
+tfidf_train = load_npz('preprocessed_data/tfidf_matrix.npz')
+tfidf_dev = load_npz('preprocessed_data/tfidf_matrix_dev.npz')
 
 # Charger le vectoriseur
 with open('preprocessed_data/tfidf_vectorizer.pkl', 'rb') as f:
