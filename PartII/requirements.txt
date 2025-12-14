@@ -1,0 +1,5 @@
+pandas
+gliner
+ast
+scikit-learn
+spacy
