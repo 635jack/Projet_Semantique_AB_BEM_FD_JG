@@ -124,6 +124,71 @@ L'analyse des tags \texttt{ner\_tags} montre un déséquilibre de classe classiq
     \item \textbf{Conséquence} : Les modèles devront gérer ce déséquilibre (ex: via des fonctions de perte pondérées).
 \end{itemize}
 
+\section{Analyse Statistique Détaillée}
+
+Cette section présente les visualisations générées à partir de l'analyse du corpus.
+
+\subsection{Distribution des Longueurs}
+La figure \ref{fig:dist} montre la distribution de la longueur des phrases (en nombre de mots). On observe une moyenne d'environ 24 mots, avec une variabilité importante typique des textes encyclopédiques.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\textwidth]{stats_distributions.png}
+    \caption{Distribution des longueurs de phrases et boxplot}
+    \label{fig:dist}
+\end{figure}
+
+\subsection{Impact du Preprocessing}
+Le preprocessing (nettoyage et lemmatization) permet une réduction significative de la taille du vocabulaire et de la longueur des séquences (en caractères), comme illustré en figure \ref{fig:impact}.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\textwidth]{stats_preprocessing_impact.png}
+    \caption{Impact du preprocessing sur la longueur des textes}
+    \label{fig:impact}
+\end{figure}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{@{}lr@{}}
+\toprule
+\textbf{Métrique} & \textbf{Valeur} \\ \midrule
+Taille vocabulaire original & 4990 \\
+Taille vocabulaire lemmatisé & 4280 \\
+\textbf{Réduction de vocabulaire} & \textbf{14.2\%} \\
+Réduction caractères (Cleaning) & 4.6\% \\
+Réduction caractères (Lemma) & 3.7\% \\ \bottomrule
+\end{tabular}
+\caption{Statistiques de réduction (sur échantillon)}
+\end{table}
+
+\subsection{Analyse du Vocabulaire}
+Le nuage de mots (Figure \ref{fig:cloud}) et le top 20 des mots fréquents (Figure \ref{fig:top}) mettent en évidence les thématiques du corpus (histoire, géographie, biographie) et l'effet de la lemmatization qui regroupe les termes (ex: "was/is" $\rightarrow$ "be").
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\textwidth]{stats_wordcloud.png}
+    \caption{Nuage de mots du corpus lemmatisé}
+    \label{fig:cloud}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\textwidth]{stats_top_words.png}
+    \caption{Top 20 des mots les plus fréquents}
+    \label{fig:top}
+\end{figure}
+
+\subsection{Distribution des Entités Nommées (NER)}
+La figure \ref{fig:ner} confirme le fort déséquilibre des classes. Le tag "O" est prédominant. Parmi les entités, les personnes (PER) et les lieux (LOC) sont les plus fréquents.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\textwidth]{stats_ner_distribution.png}
+    \caption{Distribution des tags NER}
+    \label{fig:ner}
+\end{figure}
+
 \section{Analyse Critique des Choix}
 
 \subsection{Choix 1 : Lemmatization vs Stemming}
