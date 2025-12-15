@@ -1,0 +1,92 @@
+{
+  "corpus": {
+    "total_documents": 700,
+    "total_tokens_analyzed": 17151
+  },
+  "pos_analysis": {
+    "unique_pos_tags": 17,
+    "top_5_pos": [
+      {
+        "tag": "NOUN",
+        "count": 2994,
+        "percentage": 17.46
+      },
+      {
+        "tag": "PROPN",
+        "count": 2241,
+        "percentage": 13.07
+      },
+      {
+        "tag": "ADP",
+        "count": 2104,
+        "percentage": 12.27
+      },
+      {
+        "tag": "PUNCT",
+        "count": 2049,
+        "percentage": 11.95
+      },
+      {
+        "tag": "DET",
+        "count": 1562,
+        "percentage": 9.11
+      }
+    ]
+  },
+  "tfidf_analysis": {
+    "matrix_shape": [
+      700,
+      2493
+    ],
+    "vocabulary_size": 2493,
+    "sparsity_percentage": 0.77,
+    "parameters": {
+      "max_features": 3000,
+      "min_df": 2,
+      "max_df": 0.8,
+      "ngram_range": "(1, 2)"
+    },
+    "top_10_terms": [
+      {
+        "term": "the",
+        "tfidf_score": 0.0673
+      },
+      {
+        "term": "be",
+        "tfidf_score": 0.0484
+      },
+      {
+        "term": "of",
+        "tfidf_score": 0.0482
+      },
+      {
+        "term": "in",
+        "tfidf_score": 0.0447
+      },
+      {
+        "term": "and",
+        "tfidf_score": 0.0438
+      },
+      {
+        "term": "to",
+        "tfidf_score": 0.0391
+      },
+      {
+        "term": "have",
+        "tfidf_score": 0.0226
+      },
+      {
+        "term": "as",
+        "tfidf_score": 0.0222
+      },
+      {
+        "term": "of the",
+        "tfidf_score": 0.0219
+      },
+      {
+        "term": "for",
+        "tfidf_score": 0.0206
+      }
+    ]
+  }
+}

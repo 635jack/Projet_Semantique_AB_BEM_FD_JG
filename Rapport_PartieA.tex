@@ -116,78 +116,59 @@ L'analyse réalisée dans le notebook \texttt{PartieA\_Analyse\_Statistique.ipyn
     \item \textbf{Impact du preprocessing} : La lemmatization réduit la taille du vocabulaire d'environ \textbf{15\% à 25\%}, ce qui densifie l'information sans perte majeure de sens.
 \end{itemize}
 
-\subsection{Distribution des Entités (NER)}
-L'analyse des tags \texttt{ner\_tags} montre un déséquilibre de classe classique :
-\begin{itemize}
-    \item Le tag \textbf{O (Other)} est ultra-majoritaire (tokens non-entités).
-    \item Les entités \textbf{B-PER}, \textbf{B-LOC}, \textbf{B-ORG} sont présentes mais minoritaires.
-    \item \textbf{Conséquence} : Les modèles devront gérer ce déséquilibre (ex: via des fonctions de perte pondérées).
-\end{itemize}
-
-\section{Analyse Statistique Détaillée}
-
-Cette section présente les visualisations générées à partir de l'analyse du corpus.
-
-\subsection{Distribution des Longueurs}
-La figure \ref{fig:dist} montre la distribution de la longueur des phrases (en nombre de mots). On observe une moyenne d'environ 24 mots, avec une variabilité importante typique des textes encyclopédiques.
-
-\begin{figure}[h]
-    \centering
-    \includegraphics[width=0.8\textwidth]{stats_distributions.png}
-    \caption{Distribution des longueurs de phrases et boxplot}
-    \label{fig:dist}
-\end{figure}
-
-\subsection{Impact du Preprocessing}
-Le preprocessing (nettoyage et lemmatization) permet une réduction significative de la taille du vocabulaire et de la longueur des séquences (en caractères), comme illustré en figure \ref{fig:impact}.
-
-\begin{figure}[h]
-    \centering
-    \includegraphics[width=0.8\textwidth]{stats_preprocessing_impact.png}
-    \caption{Impact du preprocessing sur la longueur des textes}
-    \label{fig:impact}
-\end{figure}
+\subsection{Analyse POS (Part-of-Speech)}
+Le corpus a été analysé avec spaCy pour identifier les catégories grammaticales. Sur 17 151 tokens analysés (échantillon de 700 phrases), la distribution révèle les patterns suivants :
 
 \begin{table}[h]
 \centering
-\begin{tabular}{@{}lr@{}}
+\begin{tabular}{@{}lrr@{}}
 \toprule
-\textbf{Métrique} & \textbf{Valeur} \\ \midrule
-Taille vocabulaire original & 4990 \\
-Taille vocabulaire lemmatisé & 4280 \\
-\textbf{Réduction de vocabulaire} & \textbf{14.2\%} \\
-Réduction caractères (Cleaning) & 4.6\% \\
-Réduction caractères (Lemma) & 3.7\% \\ \bottomrule
+\textbf{POS Tag} & \textbf{Count} & \textbf{Pourcentage} \\ \midrule
+NOUN (Nom) & 2994 & 17.46\% \\
+PROPN (Nom propre) & 2241 & 13.07\% \\
+ADP (Préposition) & 2104 & 12.27\% \\
+PUNCT (Ponctuation) & 2049 & 11.95\% \\
+DET (Déterminant) & 1562 & 9.11\% \\ \bottomrule
 \end{tabular}
-\caption{Statistiques de réduction (sur échantillon)}
+\caption{Top 5 des catégories POS}
 \end{table}
 
-\subsection{Analyse du Vocabulaire}
-Le nuage de mots (Figure \ref{fig:cloud}) et le top 20 des mots fréquents (Figure \ref{fig:top}) mettent en évidence les thématiques du corpus (histoire, géographie, biographie) et l'effet de la lemmatization qui regroupe les termes (ex: "was/is" $\rightarrow$ "be").
+La figure \ref{fig:pos} montre la distribution complète des 15 principales catégories POS. On observe une forte présence de noms et noms propres (30.5\% combinés), typique des textes encyclopédiques/biographiques axés sur des personnages et des lieux.
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.8\textwidth]{stats_wordcloud.png}
-    \caption{Nuage de mots du corpus lemmatisé}
-    \label{fig:cloud}
+    \includegraphics[width=\textwidth]{pos_distribution.png}
+    \caption{Distribution des catégories POS (Top 15)}
+    \label{fig:pos}
 \end{figure}
+
+\subsection{Vectorisation TF-IDF}
+Le corpus lemmatisé a été transformé en représentation vectorielle TF-IDF, produisant une matrice de \textbf{700 documents × 2493 features}.
+
+\textbf{Caractéristiques de la matrice :}
+\begin{itemize}
+    \item \textbf{Vocabulaire} : 2493 termes uniques (unigrammes et bigrammes)
+    \item \textbf{Sparsité} : 0.77\% (matrice très sparse, typique de TF-IDF)
+    \item \textbf{Paramètres} : max\_df=0.8, min\_df=2, ngram\_range=(1,2)
+\end{itemize}
+
+La figure \ref{fig:tfidf} présente les 20 termes avec les scores TF-IDF moyens les plus élevés. On note la prédominance d'articles et connecteurs (the, of, in), ce qui est attendu mais peut être filtré pour des analyses sémantiques plus fines.
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.8\textwidth]{stats_top_words.png}
-    \caption{Top 20 des mots les plus fréquents}
-    \label{fig:top}
+    \includegraphics[width=\textwidth]{tfidf_top_terms.png}
+    \caption{Top 20 termes par score TF-IDF moyen}
+    \label{fig:tfidf}
 \end{figure}
 
-\subsection{Distribution des Entités Nommées (NER)}
-La figure \ref{fig:ner} confirme le fort déséquilibre des classes. Le tag "O" est prédominant. Parmi les entités, les personnes (PER) et les lieux (LOC) sont les plus fréquents.
+\textbf{Applications :}
+\begin{itemize}
+    \item Classification de documents
+    \item Extraction de mots-clés
+    \item Analyse de similarité entre phrases
+    \item Clustering sémantique
+\end{itemize}
 
-\begin{figure}[h]
-    \centering
-    \includegraphics[width=0.8\textwidth]{stats_ner_distribution.png}
-    \caption{Distribution des tags NER}
-    \label{fig:ner}
-\end{figure}
 
 \section{Analyse Critique des Choix}
 
