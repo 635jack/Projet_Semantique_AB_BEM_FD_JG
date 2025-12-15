@@ -11,7 +11,7 @@
 \usepackage{xcolor}
 \usepackage{listings}
 
-\geometry{margin=2.5cm}
+\geometry{top=1cm, bottom=2cm, left=2.5cm, right=2.5cm}
 
 % Configuration des liens
 \hypersetup{
@@ -42,10 +42,7 @@
 \lhead{Projet Sémantique}
 \cfoot{\thepage}
 
-\title{\textbf{Projet Knowledge Extraction}\\
-\large Partie A : Preprocessing, Analyse Statistique et Justification des Choix\\
-\vspace{0.5cm}
-\normalsize Rapport Technique Final}
+\title{\textbf{Projet Knowledge Extraction - Partie A}}
 
 \author{
 Jacques Gastebois\\
@@ -53,22 +50,17 @@ Jacques Gastebois\\
 \small IFLCE085 - Recherche et extraction sémantique
 }
 
-\date{\today}
+\date{}
 
 \begin{document}
 
 \maketitle
 
-\begin{abstract}
-Ce rapport relate les travaux que j'ai réalisés pour la Partie A du projet. Il a pour dessein de présenter le pipeline de preprocessing appliqué au corpus NER, d'en exposer l'analyse statistique et de justifier mes choix techniques. J'y aborde les avantages et inconvénients de ces traitements ainsi que leurs impacts sur les tâches d'extraction d'entités et de relations.
-\end{abstract}
 
-\tableofcontents
-\newpage
 
 \section{Introduction}
 Ce projet a pour dessein l'extraction de connaissances structurées à partir d'un corpus de textes non structurés. La première étape, cruciale, est le \textbf{preprocessing}, qui transforme les données brutes en un format exploitable.
-Dans ce rapport, je commencerai par la présentation du corpus. Par la suite, je décrirai la méthodologie que j'ai mise en œuvre. Pour conclure, je m'arrêterai sur l'analyse critique de mes choix et leurs impacts sur la suite du projet.
+Dans ce rapport, je présenterai le corpus et la méthodologie de preprocessing mise en œuvre. J'exposerai ensuite l'analyse statistique détaillée, incluant la distribution des \textbf{Part-of-Speech (POS)} et la vectorisation \textbf{TF-IDF}. Pour conclure, je justifierai mes choix techniques et leurs impacts sur la suite du projet.
 
 \subsection{Le Corpus}
 Le dataset (\texttt{data.csv}) est constitué de \textbf{2221 phrases} annotées pour la reconnaissance d'entités nommées (NER).
@@ -114,20 +106,21 @@ L'analyse que j'ai menée dans le notebook \texttt{PartieA\_Analyse\_Statistique
 \begin{itemize}
     \item \textbf{Nombre de phrases} : 2221.
     \item \textbf{Longueur moyenne} : $\sim$24 mots par phrase.
-    \item \textbf{Impact du preprocessing} : La lemmatization réduit la taille du vocabulaire d'environ \textbf{15\% à 25\%}, densifiant l'information sans perte de sens.
+    \item \textbf{Impact du preprocessing} : Comme illustré par la Figure \ref{fig:impact}, la lemmatization réduit significativement la taille du vocabulaire (d'environ \textbf{15\% à 25\%}). Cela permet de "densifier" l'information en regroupant les variantes d'un même mot.
+    \item \textbf{Réduction des outliers} : On observe sur la Figure \ref{fig:impact} une diminution drastique de la longueur des phrases "outliers" (points situés au-dessus des moustaches). Cela s'explique par le nettoyage qui supprime les caractères spéciaux, la ponctuation excessive et les métadonnées parasites souvent responsables de ces longueurs aberrantes dans le texte brut.
 \end{itemize}
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.8\textwidth]{stats_distributions.png}
+    \includegraphics[width=0.6\textwidth]{stats_distributions.png}
     \caption{Distribution des longueurs de phrases et de mots}
     \label{fig:dist}
 \end{figure}
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.8\textwidth]{stats_preprocessing_impact.png}
-    \caption{Impact du preprocessing sur la taille du vocabulaire}
+    \includegraphics[width=0.6\textwidth]{stats_preprocessing_impact.png}
+    \caption{Impact du preprocessing sur la taille du vocabulaire et la longueur des textes}
     \label{fig:impact}
 \end{figure}
 
@@ -136,62 +129,84 @@ L'analyse des mots les plus fréquents et du nuage de mots met en évidence les 
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.8\textwidth]{stats_top_words.png}
+    \includegraphics[width=0.6\textwidth]{stats_top_words.png}
     \caption{Mots les plus fréquents (hors stop-words)}
     \label{fig:topwords}
 \end{figure}
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.8\textwidth]{stats_wordcloud.png}
+    \includegraphics[width=0.6\textwidth]{stats_wordcloud.png}
     \caption{Nuage de mots du corpus}
     \label{fig:wordcloud}
 \end{figure}
 
 \subsection{Analyse POS (Part-of-Speech)}
-J'ai analysé le corpus avec spaCy pour identifier les catégories grammaticales. Sur 17 151 tokens, la distribution est la suivante :
+\textbf{Choix de la méthode} : Utilisation du \textit{tagger} probabiliste de la librairie \textbf{spaCy} (\texttt{en\_core\_web\_sm}).
 
-\begin{table}[h]
-\centering
-\begin{tabular}{@{}lrr@{}}
-\toprule
-\textbf{POS Tag} & \textbf{Count} & \textbf{Pourcentage} \\ \midrule
-NOUN (Nom) & 2994 & 17.46\% \\
-PROPN (Nom propre) & 2241 & 13.07\% \\
-ADP (Préposition) & 2104 & 12.27\% \\
-PUNCT (Ponctuation) & 2049 & 11.95\% \\
-DET (Déterminant) & 1562 & 9.11\% \\ \bottomrule
-\end{tabular}
-\caption{Top 5 des catégories POS}
-\end{table}
+\textbf{Avantages} :
+\begin{itemize}
+    \item Rapidité d'exécution et robustesse sur l'anglais standard.
+    \item Fournit des étiquettes universelles (UPOS) faciles à interpréter.
+\end{itemize}
 
-La figure \ref{fig:pos} montre la prédominance des noms et noms propres (30.5\%), typique de textes biographiques.
+\textbf{Inconvénients} :
+\begin{itemize}
+    \item Sensible aux erreurs de capitalisation (le passage en minuscules peut créer des ambiguïtés, ex: "Apple" vs "apple").
+\end{itemize}
+
+Sur 17 151 tokens, la distribution est la suivante :
+
+
+
+Sur 17 151 tokens, la distribution est présentée en Figure \ref{fig:pos}. On note une prédominance des noms et noms propres (30.5\%), typique de textes biographiques.
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=\textwidth]{pos_distribution.png}
+    \includegraphics[width=0.4\textwidth]{pos_distribution.png}
     \caption{Distribution des catégories POS (Top 15)}
     \label{fig:pos}
 \end{figure}
 
 \subsection{Vectorisation TF-IDF}
-J'ai transformé le corpus lemmatisé en représentation TF-IDF, obtenant une matrice de \textbf{700 documents × 2493 features}.
+\textbf{Choix de la méthode} : Vectorisation \textbf{TF-IDF} (Term Frequency-Inverse Document Frequency).
+
+\textbf{Avantages} :
+\begin{itemize}
+    \item Permet de pondérer les termes selon leur importance relative (pénalise les mots très fréquents et peu informatifs comme "the", "is").
+    \item Réduit l'impact des "stop words" sans les supprimer brutalement.
+\end{itemize}
+
+\textbf{Inconvénients} :
+\begin{itemize}
+    \item Perte de la sémantique séquentielle (approche "Bag of Words").
+    \item Génère des matrices très creuses (haute dimensionnalité).
+\end{itemize}
+
+J'ai obtenu une matrice de \textbf{700 documents $\times$ 2493 features}.
 
 \textbf{Caractéristiques :}
 \begin{itemize}
     \item \textbf{Vocabulaire} : 2493 termes uniques.
-    \item \textbf{Sparsité} : 0.77\%.
-    \item \textbf{Paramètres} : max\_df=0.8, min\_df=2, ngram\_range=(1,2).
+    \item \textbf{Densité} : 0.77\% (La matrice est très creuse, signifiant que chaque document ne contient qu'une infime fraction du vocabulaire global, ce qui est typique des données textuelles).
+    \item \textbf{Paramètres} :
+    \begin{itemize}
+        \item \texttt{max\_df=0.8} : J'ai exclu les termes présents dans plus de 80\% des documents. Ces mots sont considérés comme des "stop words" spécifiques au corpus (trop fréquents pour être discriminants).
+        \item \texttt{min\_df=2} : J'ai ignoré les termes apparaissant dans moins de 2 documents. Cela permet d'éliminer le bruit (fautes de frappe, hapax legomena) et de réduire la dimensionnalité de la matrice sans perdre d'information généralisable.
+        \item \texttt{ngram\_range=(1,2)} : J'ai inclus non seulement les mots uniques (unigrammes) mais aussi les paires de mots consécutifs (bigrammes). Cela permet de capturer des concepts composés (ex: "machine learning", "new york") qui ont un sens propre différent de la somme de leurs parties.
+    \end{itemize}
 \end{itemize}
 
 La figure \ref{fig:tfidf} présente les termes aux scores TF-IDF les plus élevés.
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=\textwidth]{tfidf_top_terms.png}
+    \includegraphics[width=0.6\textwidth]{tfidf_top_terms.png}
     \caption{Top 20 termes par score TF-IDF moyen}
     \label{fig:tfidf}
 \end{figure}
+
+\textbf{Interprétation} : La Figure \ref{fig:tfidf} montre que les termes ayant les scores TF-IDF les plus élevés restent des mots très courants de la langue anglaise ("the", "be", "of", "in"). Cela indique que ces termes sont présents dans une grande majorité des documents avec une fréquence élevée. Bien que le TF-IDF pénalise théoriquement les mots présents partout (IDF faible), leur fréquence brute (TF) est ici si importante qu'elle compense cette pénalité. Pour des tâches ultérieures plus fines, il serait pertinent d'envisager une liste de "stop words" plus agressive pour faire ressortir des termes plus spécifiques au domaine.
 
 
 \section{Analyse Critique des Choix}
