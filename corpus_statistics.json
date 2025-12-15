@@ -1,0 +1,24 @@
+{
+  "corpus": {
+    "total_sentences": 700,
+    "avg_words_per_sentence": 24.161428571428573,
+    "avg_chars_per_sentence": 132.63857142857142,
+    "min_words": 3,
+    "max_words": 105
+  },
+  "vocabulary": {
+    "original_vocab_size": 4990,
+    "lemmatized_vocab_size": 4280,
+    "reduction_percentage": 14.228456913827658
+  },
+  "ner_distribution": {
+    "O (Other)": 15155,
+    "B-PER (Person)": 745,
+    "B-ORG (Organization)": 383,
+    "B-LOC (Location)": 630
+  },
+  "preprocessing_impact": {
+    "cleaning_reduction": 4.580654194535095,
+    "lemmatization_reduction": 3.7463033614014485
+  }
+}

@@ -60,64 +60,96 @@ Jacques Gastebois\\
 \maketitle
 
 \begin{abstract}
-Ce rapport synthétise les travaux réalisés pour la Partie A du projet. Il détaille le pipeline de preprocessing appliqué au corpus NER (2221 phrases), présente une analyse statistique des données, et justifie les choix techniques (nettoyage, lemmatization) en analysant leurs avantages, inconvénients et impacts sur les tâches d'extraction d'entités (Partie B) et de relations (Partie C).
+Ce rapport relate les travaux que j'ai réalisés pour la Partie A du projet. Il a pour dessein de présenter le pipeline de preprocessing appliqué au corpus NER, d'en exposer l'analyse statistique et de justifier mes choix techniques. J'y aborde les avantages et inconvénients de ces traitements ainsi que leurs impacts sur les tâches d'extraction d'entités et de relations.
 \end{abstract}
 
 \tableofcontents
 \newpage
 
 \section{Introduction}
-Le projet vise à extraire des connaissances structurées à partir d'un corpus de textes non structurés. La première étape cruciale est le \textbf{preprocessing}, qui transforme les données brutes en un format exploitable pour les algorithmes d'apprentissage automatique.
+Ce projet a pour dessein l'extraction de connaissances structurées à partir d'un corpus de textes non structurés. La première étape, cruciale, est le \textbf{preprocessing}, qui transforme les données brutes en un format exploitable.
+Dans ce rapport, je commencerai par la présentation du corpus. Par la suite, je décrirai la méthodologie que j'ai mise en œuvre. Pour conclure, je m'arrêterai sur l'analyse critique de mes choix et leurs impacts sur la suite du projet.
 
 \subsection{Le Corpus}
-Le dataset utilisé (\texttt{data.csv}) est constitué de \textbf{2221 phrases} annotées pour la reconnaissance d'entités nommées (NER).
+Le dataset (\texttt{data.csv}) est constitué de \textbf{2221 phrases} annotées pour la reconnaissance d'entités nommées (NER).
 \begin{itemize}
     \item \textbf{Format d'entrée} : CSV avec colonnes \texttt{id}, \texttt{words}, \texttt{ner\_tags}, \texttt{text}.
-    \item \textbf{Contenu} : Textes encyclopédiques/biographiques.
-    \item \textbf{Annotations} : Tags BIO (Begin, Inside, Outside) pour les entités Personnes (PER), Lieux (LOC), Organisations (ORG), etc.
+    \item \textbf{Contenu} : Textes encyclopédiques et biographiques.
+    \item \textbf{Annotations} : Tags BIO pour les entités Personnes, Lieux, Organisations, etc.
 \end{itemize}
 
 \section{Méthodologie de Preprocessing}
 
-Contrairement à une approche classique de "Bag of Words" (TF-IDF), nous avons opté pour une approche de \textbf{preprocessing enrichi} qui préserve la structure séquentielle des données, essentielle pour le NER.
+Contrairement à une approche classique de "Bag of Words", j'ai opté pour un \textbf{preprocessing enrichi} préservant la structure séquentielle, indispensable pour le NER.
 
 \subsection{Pipeline Mis en Place}
-Le traitement a été réalisé en Python (via un notebook Jupyter) et comprend les étapes suivantes :
+J'ai développé le traitement en Python via un notebook Jupyter, selon les étapes suivantes :
 
 \begin{enumerate}
     \item \textbf{Nettoyage (\texttt{cleaned\_text})} :
     \begin{itemize}
-        \item Conversion en minuscules (lowercase) pour réduire la dimensionnalité.
-        \item Suppression des caractères spéciaux non alphanumériques (sauf espaces).
-        \item Normalisation des espaces multiples.
+        \item Conversion en minuscules pour réduire la dimensionnalité.
+        \item Suppression des caractères spéciaux non alphanumériques.
+        \item Normalisation des espaces.
     \end{itemize}
     
     \item \textbf{Lemmatization (\texttt{lemmatized\_text})} :
     \begin{itemize}
-        \item Utilisation de la librairie \textbf{spaCy} (modèle \texttt{en\_core\_web\_sm}).
-        \item Transformation des mots en leur forme canonique (ex: "running" $\rightarrow$ "run", "better" $\rightarrow$ "good").
+        \item Utilisation de la librairie \textbf{spaCy}.
+        \item Transformation des mots en leur forme canonique.
     \end{itemize}
     
     \item \textbf{Enrichissement du Dataset} :
     \begin{itemize}
-        \item Au lieu de créer des matrices séparées, nous avons ajouté les colonnes \texttt{cleaned\_text} et \texttt{lemmatized\_text} directement au fichier original.
+        \item J'ai ajouté les colonnes \texttt{cleaned\_text} et \texttt{lemmatized\_text} au fichier original.
         \item \textbf{Sortie} : \texttt{data\_preprocessed.csv}.
     \end{itemize}
 \end{enumerate}
 
 \section{Analyse Statistique du Corpus}
 
-L'analyse réalisée dans le notebook \texttt{PartieA\_Analyse\_Statistique.ipynb} a révélé les caractéristiques suivantes :
+L'analyse que j'ai menée dans le notebook \texttt{PartieA\_Analyse\_Statistique.ipynb} a révélé les caractéristiques suivantes :
 
 \subsection{Volumétrie et Longueur}
 \begin{itemize}
     \item \textbf{Nombre de phrases} : 2221.
     \item \textbf{Longueur moyenne} : $\sim$24 mots par phrase.
-    \item \textbf{Impact du preprocessing} : La lemmatization réduit la taille du vocabulaire d'environ \textbf{15\% à 25\%}, ce qui densifie l'information sans perte majeure de sens.
+    \item \textbf{Impact du preprocessing} : La lemmatization réduit la taille du vocabulaire d'environ \textbf{15\% à 25\%}, densifiant l'information sans perte de sens.
 \end{itemize}
 
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\textwidth]{stats_distributions.png}
+    \caption{Distribution des longueurs de phrases et de mots}
+    \label{fig:dist}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\textwidth]{stats_preprocessing_impact.png}
+    \caption{Impact du preprocessing sur la taille du vocabulaire}
+    \label{fig:impact}
+\end{figure}
+
+\subsection{Analyse Lexicale}
+L'analyse des mots les plus fréquents et du nuage de mots met en évidence les thématiques dominantes.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\textwidth]{stats_top_words.png}
+    \caption{Mots les plus fréquents (hors stop-words)}
+    \label{fig:topwords}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\textwidth]{stats_wordcloud.png}
+    \caption{Nuage de mots du corpus}
+    \label{fig:wordcloud}
+\end{figure}
+
 \subsection{Analyse POS (Part-of-Speech)}
-Le corpus a été analysé avec spaCy pour identifier les catégories grammaticales. Sur 17 151 tokens analysés (échantillon de 700 phrases), la distribution révèle les patterns suivants :
+J'ai analysé le corpus avec spaCy pour identifier les catégories grammaticales. Sur 17 151 tokens, la distribution est la suivante :
 
 \begin{table}[h]
 \centering
@@ -133,7 +165,7 @@ DET (Déterminant) & 1562 & 9.11\% \\ \bottomrule
 \caption{Top 5 des catégories POS}
 \end{table}
 
-La figure \ref{fig:pos} montre la distribution complète des 15 principales catégories POS. On observe une forte présence de noms et noms propres (30.5\% combinés), typique des textes encyclopédiques/biographiques axés sur des personnages et des lieux.
+La figure \ref{fig:pos} montre la prédominance des noms et noms propres (30.5\%), typique de textes biographiques.
 
 \begin{figure}[h]
     \centering
@@ -143,16 +175,16 @@ La figure \ref{fig:pos} montre la distribution complète des 15 principales cat�
 \end{figure}
 
 \subsection{Vectorisation TF-IDF}
-Le corpus lemmatisé a été transformé en représentation vectorielle TF-IDF, produisant une matrice de \textbf{700 documents × 2493 features}.
+J'ai transformé le corpus lemmatisé en représentation TF-IDF, obtenant une matrice de \textbf{700 documents × 2493 features}.
 
-\textbf{Caractéristiques de la matrice :}
+\textbf{Caractéristiques :}
 \begin{itemize}
-    \item \textbf{Vocabulaire} : 2493 termes uniques (unigrammes et bigrammes)
-    \item \textbf{Sparsité} : 0.77\% (matrice très sparse, typique de TF-IDF)
-    \item \textbf{Paramètres} : max\_df=0.8, min\_df=2, ngram\_range=(1,2)
+    \item \textbf{Vocabulaire} : 2493 termes uniques.
+    \item \textbf{Sparsité} : 0.77\%.
+    \item \textbf{Paramètres} : max\_df=0.8, min\_df=2, ngram\_range=(1,2).
 \end{itemize}
 
-La figure \ref{fig:tfidf} présente les 20 termes avec les scores TF-IDF moyens les plus élevés. On note la prédominance d'articles et connecteurs (the, of, in), ce qui est attendu mais peut être filtré pour des analyses sémantiques plus fines.
+La figure \ref{fig:tfidf} présente les termes aux scores TF-IDF les plus élevés.
 
 \begin{figure}[h]
     \centering
@@ -161,56 +193,44 @@ La figure \ref{fig:tfidf} présente les 20 termes avec les scores TF-IDF moyens 
     \label{fig:tfidf}
 \end{figure}
 
-\textbf{Applications :}
-\begin{itemize}
-    \item Classification de documents
-    \item Extraction de mots-clés
-    \item Analyse de similarité entre phrases
-    \item Clustering sémantique
-\end{itemize}
-
 
 \section{Analyse Critique des Choix}
 
 \subsection{Choix 1 : Lemmatization vs Stemming}
 \begin{itemize}
     \item \textbf{Choix} : Lemmatization (spaCy).
-    \item \textbf{Avantages} : Produit des mots réels (formes dictionnaire), préserve mieux le sens sémantique pour l'extraction de relations (Partie C). Plus précis que le stemming (qui tronque brutalement).
-    \item \textbf{Inconvénients} : Plus coûteux en temps de calcul. Peut perdre certaines nuances flexionnelles (temps des verbes) utiles pour la temporalité.
+    \item \textbf{Avantages} : Préserve le sens sémantique, indispensable pour l'extraction de relations.
+    \item \textbf{Inconvénients} : Coûteux en calcul, perte de certaines nuances flexionnelles.
 \end{itemize}
 
-\subsection{Choix 2 : Lowercasing (Mise en minuscule)}
+\subsection{Choix 2 : Lowercasing}
 \begin{itemize}
-    \item \textbf{Choix} : Tout mettre en minuscule dans \texttt{cleaned\_text}.
-    \item \textbf{Avantages} : Réduit drastiquement la taille du vocabulaire. Associe "Apple" (fruit) et "apple" (fruit).
-    \item \textbf{Inconvénients (Critique pour le NER)} : \textbf{Perte de l'information de capitalisation}, qui est un indice crucial pour détecter les entités nommées (ex: "Apple" l'entreprise vs "apple" le fruit).
-    \item \textbf{Mitigation} : Nous avons conservé la colonne \texttt{text} originale. Les modèles NER modernes (BERT, etc.) ou les features manuelles peuvent utiliser le texte brut pour récupérer la casse.
+    \item \textbf{Choix} : Tout mettre en minuscule.
+    \item \textbf{Avantages} : Réduit la taille du vocabulaire.
+    \item \textbf{Inconvénients} : \textbf{Perte de la capitalisation}, indice crucial pour le NER.
+    \item \textbf{Mitigation} : J'ai conservé la colonne \texttt{text} originale pour pallier ce défaut.
 \end{itemize}
 
 \subsection{Choix 3 : Conservation de la Structure Séquentielle}
 \begin{itemize}
-    \item \textbf{Choix} : Ne pas vectoriser en TF-IDF (Bag of Words) pour l'export final.
-    \item \textbf{Avantages} : Indispensable pour le NER et l'extraction de relations qui dépendent de l'ordre des mots et du contexte local. Permet l'utilisation de modèles de Deep Learning (RNN, Transformers).
-    \item \textbf{Inconvénients} : Fichiers texte plus volumineux que des matrices creuses.
+    \item \textbf{Choix} : Pas de vectorisation TF-IDF pour l'export final.
+    \item \textbf{Avantages} : Indispensable pour le NER et l'extraction de relations.
+    \item \textbf{Inconvénients} : Fichiers plus volumineux.
 \end{itemize}
 
 \section{Impact sur la Suite du Projet}
 
 \subsection{Impact sur la Partie II (NER)}
-Le preprocessing fournit une base propre (\texttt{lemmatized\_text}) qui généralise mieux. Cependant, pour maximiser les scores F1, il sera probablement nécessaire d'utiliser :
+Le preprocessing fournit une base propre. Toutefois, pour maximiser les résultats, il me faudra utiliser :
 \begin{enumerate}
-    \item Le \textbf{texte original} pour les features de capitalisation.
-    \item Le \textbf{texte lemmatisé} pour les embeddings sémantiques (Word2Vec/GloVe) afin de regrouper les variantes d'un même mot.
+    \item Le \textbf{texte original} pour la capitalisation.
+    \item Le \textbf{texte lemmatisé} pour les embeddings sémantiques.
 \end{enumerate}
 
 \subsection{Impact sur la Partie C (Extraction de Relations)}
-L'extraction de relations (triplets Sujet-Verbe-Objet) bénéficie grandement de la lemmatization :
-\begin{itemize}
-    \item Elle normalise les verbes (ex: "est né", "naquit" $\rightarrow$ "naître"), simplifiant la détection de patterns de relations.
-    \item Elle réduit la complexité des arbres de dépendance syntaxique.
-\end{itemize}
+L'extraction de relations bénéficie de la lemmatization qui normalise les verbes et simplifie les arbres de dépendance.
 
 \section{Conclusion}
-Le preprocessing réalisé est un compromis entre \textbf{réduction de bruit} (nettoyage, lemmatization) et \textbf{préservation de l'information} (conservation du texte brut et de la séquence). Ce socle de données enrichi (\texttt{data\_preprocessed.csv}) est robuste et adapté aux défis des parties suivantes : la reconnaissance fine d'entités et l'extraction complexe de relations sémantiques.
+En conclusion, je ne ferai qu'insister sur le fait que le preprocessing réalisé est un compromis entre réduction de bruit et préservation de l'information. Ce socle de données enrichi est robuste et adapté aux défis que j'aurai à relever par la suite : la reconnaissance fine d'entités et l'extraction de relations.
 
 \end{document}

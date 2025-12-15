@@ -8,28 +8,28 @@
     "top_5_pos": [
       {
         "tag": "NOUN",
-        "count": 2994,
-        "percentage": 17.46
+        "count": 2966,
+        "percentage": 17.29
       },
       {
         "tag": "PROPN",
-        "count": 2241,
-        "percentage": 13.07
+        "count": 2262,
+        "percentage": 13.19
       },
       {
         "tag": "ADP",
-        "count": 2104,
-        "percentage": 12.27
+        "count": 2110,
+        "percentage": 12.3
       },
       {
         "tag": "PUNCT",
-        "count": 2049,
-        "percentage": 11.95
+        "count": 2045,
+        "percentage": 11.92
       },
       {
         "tag": "DET",
-        "count": 1562,
-        "percentage": 9.11
+        "count": 1565,
+        "percentage": 9.12
       }
     ]
   },
