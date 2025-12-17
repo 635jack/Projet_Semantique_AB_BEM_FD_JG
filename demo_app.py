@@ -8,6 +8,9 @@ import os
 import re
 import pickle
 import altair as alt
+from collections import Counter
+import streamlit.components.v1 as components
+import json
 
 # Page Configuration
 st.set_page_config(
@@ -15,6 +18,31 @@ st.set_page_config(
     page_icon="🧠",
     layout="wide"
 )
+
+# Custom CSS for hover zoom effect on images
+st.markdown("""
+<style>
+    /* Hover zoom effect for images */
+    img {
+        transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+        cursor: pointer;
+    }
+    img:hover {
+        transform: scale(1.15);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        z-index: 100;
+    }
+    
+    /* Hover effect for iframes (embedded charts) */
+    iframe {
+        transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+    }
+    iframe:hover {
+        transform: scale(1.05);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+    }
+</style>
+""", unsafe_allow_html=True)
 
 # Load Data (Cached)
 @st.cache_data
@@ -41,6 +69,18 @@ def load_tfidf():
         with open('tfidf_vectorizer.pkl', 'rb') as f:
             return pickle.load(f)
     return None
+
+# Get Word Frequencies for Word Cloud
+@st.cache_data
+def get_word_frequencies(dataframe, top_n=40):
+    if dataframe is None or 'lemmatized_text' not in dataframe.columns:
+        return []
+    all_words = ' '.join(dataframe['lemmatized_text'].dropna()).split()
+    # Filter out short words and common stopwords
+    stopwords = {'the', 'be', 'to', 'of', 'and', 'a', 'in', 'that', 'have', 'i', 'it', 'for', 'not', 'on', 'with', 'he', 'as', 'you', 'do', 'at', 'this', 'but', 'his', 'by', 'from', 'they', 'we', 'say', 'her', 'she', 'or', 'an', 'will', 'my', 'one', 'all', 'would', 'there', 'their', 'what', 'so', 'up', 'out', 'if', 'about', 'who', 'get', 'which', 'go', 'me'}
+    filtered_words = [w for w in all_words if len(w) > 2 and w not in stopwords]
+    word_counts = Counter(filtered_words).most_common(top_n)
+    return [{"tag": word, "count": count} for word, count in word_counts]
 
 nlp = load_nlp()
 vectorizer = load_tfidf()
@@ -94,30 +134,160 @@ with tab2:
     col1, col2 = st.columns(2)
     
     with col1:
-        st.subheader("Nuage de Mots")
-        if os.path.exists('stats_wordcloud.png'):
-            st.image('stats_wordcloud.png', width="stretch")
+        st.subheader("Nuage de Mots Interactif")
+        word_data = get_word_frequencies(df)
+        if word_data:
+            word_data_json = json.dumps(word_data)
+            wordcloud_html = f"""
+            <div id="chartdiv" style="width: 100%; height: 400px;"></div>
+            <script src="https://cdn.amcharts.com/lib/4/core.js"></script>
+            <script src="https://cdn.amcharts.com/lib/4/charts.js"></script>
+            <script src="https://cdn.amcharts.com/lib/4/plugins/wordCloud.js"></script>
+            <script src="https://cdn.amcharts.com/lib/4/themes/animated.js"></script>
+            <script>
+            am4core.useTheme(am4themes_animated);
+            var chart = am4core.create("chartdiv", am4plugins_wordCloud.WordCloud);
+            var series = chart.series.push(new am4plugins_wordCloud.WordCloudSeries());
+            series.accuracy = 4;
+            series.step = 15;
+            series.rotationThreshold = 0.7;
+            series.maxCount = 200;
+            series.minWordLength = 2;
+            series.labels.template.tooltipText = "{{word}}: {{value}}";
+            series.fontFamily = "Courier New";
+            series.maxFontSize = am4core.percent(30);
+            series.dataFields.word = "tag";
+            series.dataFields.value = "count";
+            series.colors = new am4core.ColorSet();
+            series.colors.passOptions = {{}};
+            series.data = {word_data_json};
+            </script>
+            """
+            components.html(wordcloud_html, height=420)
         else:
             st.info("Image stats_wordcloud.png non trouvée.")
             
-        st.subheader("Distribution POS")
-        if os.path.exists('pos_distribution.png'):
-            st.image('pos_distribution.png', width="stretch")
+        st.subheader("Distribution POS (Pie Chart)")
+        # Load POS data from JSON
+        pos_data = []
+        if os.path.exists('pos_tfidf_statistics.json'):
+            with open('pos_tfidf_statistics.json', 'r') as f:
+                stats = json.load(f)
+                pos_data = stats.get('pos_analysis', {}).get('top_5_pos', [])
+        
+        if pos_data:
+            pos_data_json = json.dumps(pos_data)
+            pie_chart_html = f"""
+            <div id="piechart" style="width: 100%; height: 350px;"></div>
+            <script src="https://cdn.amcharts.com/lib/4/core.js"></script>
+            <script src="https://cdn.amcharts.com/lib/4/charts.js"></script>
+            <script src="https://cdn.amcharts.com/lib/4/themes/animated.js"></script>
+            <script>
+            am4core.useTheme(am4themes_animated);
+            var chart = am4core.create("piechart", am4charts.PieChart);
+            chart.data = {pos_data_json};
+            var pieSeries = chart.series.push(new am4charts.PieSeries());
+            pieSeries.dataFields.value = "percentage";
+            pieSeries.dataFields.category = "tag";
+            pieSeries.slices.template.tooltipText = "{{category}}: {{value}}%";
+            pieSeries.slices.template.stroke = am4core.color("#fff");
+            pieSeries.slices.template.strokeWidth = 2;
+            pieSeries.slices.template.strokeOpacity = 1;
+            // Hover effect
+            pieSeries.slices.template.states.getKey("hover").properties.scale = 1.1;
+            pieSeries.slices.template.states.getKey("hover").properties.shiftRadius = 0.05;
+            pieSeries.labels.template.text = "{{category}}";
+            pieSeries.ticks.template.disabled = true;
+            chart.legend = new am4charts.Legend();
+            chart.legend.position = "right";
+            </script>
+            """
+            components.html(pie_chart_html, height=380)
         else:
-            st.info("Image pos_distribution.png non trouvée.")
+            st.info("Données POS non disponibles.")
 
     with col2:
-        st.subheader("Impact du Preprocessing")
-        if os.path.exists('stats_preprocessing_impact.png'):
-            st.image('stats_preprocessing_impact.png', width="stretch")
+        st.subheader("Top Termes TF-IDF (Bar Chart)")
+        # Load TF-IDF data from JSON
+        tfidf_data = []
+        if os.path.exists('pos_tfidf_statistics.json'):
+            with open('pos_tfidf_statistics.json', 'r') as f:
+                stats = json.load(f)
+                tfidf_data = stats.get('tfidf_analysis', {}).get('top_10_terms', [])
+        
+        if tfidf_data:
+            tfidf_data_json = json.dumps(tfidf_data)
+            bar_chart_html = f"""
+            <div id="barchart" style="width: 100%; height: 350px;"></div>
+            <script src="https://cdn.amcharts.com/lib/4/core.js"></script>
+            <script src="https://cdn.amcharts.com/lib/4/charts.js"></script>
+            <script src="https://cdn.amcharts.com/lib/4/themes/animated.js"></script>
+            <script>
+            am4core.useTheme(am4themes_animated);
+            var chart = am4core.create("barchart", am4charts.XYChart);
+            chart.data = {tfidf_data_json};
+            var categoryAxis = chart.yAxes.push(new am4charts.CategoryAxis());
+            categoryAxis.dataFields.category = "term";
+            categoryAxis.renderer.inversed = true;
+            categoryAxis.renderer.grid.template.location = 0;
+            categoryAxis.renderer.labels.template.fontSize = 12;
+            var valueAxis = chart.xAxes.push(new am4charts.ValueAxis());
+            valueAxis.min = 0;
+            valueAxis.title.text = "Score TF-IDF";
+            var series = chart.series.push(new am4charts.ColumnSeries());
+            series.dataFields.valueX = "tfidf_score";
+            series.dataFields.categoryY = "term";
+            series.columns.template.tooltipText = "{{categoryY}}: {{valueX}}";
+            series.columns.template.strokeOpacity = 0;
+            // Hover effect
+            series.columns.template.states.getKey("hover").properties.fillOpacity = 0.8;
+            series.columns.template.adapter.add("fill", function(fill, target) {{
+                return chart.colors.getIndex(target.dataItem.index);
+            }});
+            chart.cursor = new am4charts.XYCursor();
+            </script>
+            """
+            components.html(bar_chart_html, height=380)
         else:
-            st.info("Image stats_preprocessing_impact.png non trouvée.")
+            st.info("Données TF-IDF non disponibles.")
+        
+        st.subheader("Impact du Preprocessing (Boxplot)")
+        
+        # Create interactive boxplot with Plotly
+        if df is not None:
+            import plotly.graph_objects as go
             
-        st.subheader("Top Termes TF-IDF")
-        if os.path.exists('tfidf_top_terms.png'):
-            st.image('tfidf_top_terms.png', width="stretch")
+            # Calculate text lengths for each column
+            text_lengths = {
+                'Texte Original': df['text'].str.len().dropna().tolist(),
+                'Texte Nettoyé': df['cleaned_text'].str.len().dropna().tolist() if 'cleaned_text' in df.columns else [],
+                'Texte Lemmatisé': df['lemmatized_text'].str.len().dropna().tolist() if 'lemmatized_text' in df.columns else []
+            }
+            
+            fig = go.Figure()
+            
+            colors = ['#1f77b4', '#2ca02c', '#ff7f0e']
+            for i, (name, data) in enumerate(text_lengths.items()):
+                if data:
+                    fig.add_trace(go.Box(
+                        y=data,
+                        name=name,
+                        marker_color=colors[i],
+                        boxmean='sd',
+                        hovertemplate='<b>%{x}</b><br>Valeur: %{y}<extra></extra>'
+                    ))
+            
+            fig.update_layout(
+                title='Impact du Preprocessing sur la Longueur des Textes',
+                yaxis_title='Longueur (caractères)',
+                showlegend=True,
+                height=400,
+                hovermode='x unified'
+            )
+            
+            st.plotly_chart(fig, use_container_width=True)
         else:
-            st.info("Image tfidf_top_terms.png non trouvée.")
+            st.info("Données non disponibles pour le boxplot.")
 
 # Tab 3: Interactive Demo
 with tab3:
