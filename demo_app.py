@@ -9,21 +9,32 @@ import altair as alt
 from collections import Counter
 import streamlit.components.v1 as components
 import json
+import pickle
 
-# Try to import spacy (optional for cloud deployment)
-try:
-    import spacy
-    SPACY_AVAILABLE = True
-except ImportError:
-    SPACY_AVAILABLE = False
-    spacy = None
+# Import NLTK for NLP processing (pure Python, works on cloud)
+import nltk
 
-# Try to import pickle for TF-IDF (optional)
-try:
-    import pickle
-    PICKLE_AVAILABLE = True
-except ImportError:
-    PICKLE_AVAILABLE = False
+# Download required NLTK data (cached)
+@st.cache_resource
+def download_nltk_data():
+    try:
+        nltk.download('punkt', quiet=True)
+        nltk.download('punkt_tab', quiet=True)
+        nltk.download('averaged_perceptron_tagger', quiet=True)
+        nltk.download('averaged_perceptron_tagger_eng', quiet=True)
+        nltk.download('wordnet', quiet=True)
+        nltk.download('omw-1.4', quiet=True)
+        return True
+    except:
+        return False
+
+NLTK_AVAILABLE = download_nltk_data()
+
+# Import NLTK components after download
+if NLTK_AVAILABLE:
+    from nltk.tokenize import word_tokenize
+    from nltk.stem import WordNetLemmatizer
+    from nltk import pos_tag
 
 # Page Configuration
 st.set_page_config(
@@ -66,21 +77,9 @@ def load_data():
         return pd.read_csv('data.csv')
     return None
 
-# Load NLP Model (Cached) - Optional
-@st.cache_resource
-def load_nlp():
-    if not SPACY_AVAILABLE:
-        return None
-    try:
-        return spacy.load("en_core_web_sm")
-    except:
-        return None
-
 # Load TF-IDF Vectorizer (Cached) - Optional
 @st.cache_resource
 def load_tfidf():
-    if not PICKLE_AVAILABLE:
-        return None
     if os.path.exists('tfidf_vectorizer.pkl'):
         try:
             with open('tfidf_vectorizer.pkl', 'rb') as f:
@@ -101,9 +100,12 @@ def get_word_frequencies(dataframe, top_n=40):
     word_counts = Counter(filtered_words).most_common(top_n)
     return [{"tag": word, "count": count} for word, count in word_counts]
 
-nlp = load_nlp()
 vectorizer = load_tfidf()
 df = load_data()
+
+# Initialize NLTK lemmatizer
+if NLTK_AVAILABLE:
+    lemmatizer = WordNetLemmatizer()
 
 # Helper Functions
 def clean_text(text):
@@ -112,12 +114,46 @@ def clean_text(text):
     text = re.sub(r'\s+', ' ', text).strip()
     return text
 
-def process_text(text):
+def process_text_nltk(text):
+    """Process text using NLTK (cloud-compatible)"""
     cleaned = clean_text(text)
-    doc = nlp(cleaned)
-    lemmatized = " ".join([token.lemma_ for token in doc])
-    pos_tags = [(token.text, token.pos_) for token in doc]
-    return cleaned, lemmatized, pos_tags, doc
+    
+    # Tokenize
+    tokens = word_tokenize(cleaned)
+    
+    # POS Tagging (NLTK uses Penn Treebank tags)
+    pos_tags_raw = pos_tag(tokens)
+    
+    # Convert Penn Treebank to Universal POS tags (for display)
+    penn_to_universal = {
+        'NN': 'NOUN', 'NNS': 'NOUN', 'NNP': 'PROPN', 'NNPS': 'PROPN',
+        'VB': 'VERB', 'VBD': 'VERB', 'VBG': 'VERB', 'VBN': 'VERB', 'VBP': 'VERB', 'VBZ': 'VERB',
+        'JJ': 'ADJ', 'JJR': 'ADJ', 'JJS': 'ADJ',
+        'RB': 'ADV', 'RBR': 'ADV', 'RBS': 'ADV',
+        'PRP': 'PRON', 'PRP$': 'PRON', 'WP': 'PRON', 'WP$': 'PRON',
+        'DT': 'DET', 'WDT': 'DET',
+        'IN': 'ADP', 'TO': 'ADP',
+        'CC': 'CCONJ', 'CD': 'NUM'
+    }
+    pos_tags = [(word, penn_to_universal.get(tag, 'X')) for word, tag in pos_tags_raw]
+    
+    # Lemmatization
+    lemmas = []
+    for word, tag in pos_tags_raw:
+        # Map POS tag to WordNet format
+        if tag.startswith('V'):
+            wn_tag = 'v'
+        elif tag.startswith('J'):
+            wn_tag = 'a'
+        elif tag.startswith('R'):
+            wn_tag = 'r'
+        else:
+            wn_tag = 'n'
+        lemmas.append((word, lemmatizer.lemmatize(word, pos=wn_tag)))
+    
+    lemmatized = " ".join([lemma for _, lemma in lemmas])
+    
+    return cleaned, lemmatized, pos_tags, lemmas
 
 # UI Layout
 st.title("🧠 Projet Semantique: Knowledge Extraction")
@@ -312,41 +348,34 @@ with tab2:
 with tab3:
     st.header("Pipeline de Preprocessing en Temps Réel")
     
-    if not SPACY_AVAILABLE or nlp is None:
-        st.warning("⚠️ **Démo interactive indisponible en ligne**")
-        st.info("""
-        La démo interactive NLP nécessite la librairie **spaCy** qui n'est pas disponible sur ce serveur cloud.
-        
-        **Pour tester cette fonctionnalité :**
-        1. Clonez le dépôt GitHub
-        2. Installez les dépendances : `pip install spacy && python -m spacy download en_core_web_sm`
-        3. Lancez l'app localement : `streamlit run demo_app.py`
-        """)
+    if not NLTK_AVAILABLE:
+        st.warning("⚠️ **Démo interactive temporairement indisponible**")
+        st.info("Chargement de NLTK en cours... Veuillez rafraîchir la page.")
     else:
         st.markdown("Testez le pipeline sur votre propre texte.")
         
         user_input = st.text_area("Entrez une phrase en anglais:", "Quantum computers utilize quantum bits to perform quantum calculations much faster than classical computers can perform classical calculations.")
         
         if st.button("Traiter"):
-            cleaned, lemmatized, pos_tags, doc = process_text(user_input)
+            cleaned, lemmatized, pos_tags, lemmas = process_text_nltk(user_input)
             
             st.subheader("1. Nettoyage")
             st.code(cleaned, language="text")
             
             st.subheader("2. Lemmatization (Mots modifiés en évidence)")
             
-            # Highlight lemmatization changes
+            # Highlight lemmatization changes (using NLTK format: list of (word, lemma) tuples)
             lemma_html = ""
-            for token in doc:
-                if token.text != token.lemma_:
+            for original, lemma in lemmas:
+                if original != lemma:
                     # Change detected: Highlight
-                    lemma_html += f'<span style="background-color: #FFF9C4; color: #F57F17; padding: 2px 4px; border-radius: 4px; margin-right: 4px; border: 1px solid #FBC02D;" title="{token.text} → {token.lemma_}">{token.lemma_}</span>'
+                    lemma_html += f'<span style="background-color: #FFF9C4; color: #F57F17; padding: 2px 4px; border-radius: 4px; margin-right: 4px; border: 1px solid #FBC02D;" title="{original} → {lemma}">{lemma}</span>'
                 else:
                     # No change
-                    lemma_html += f'<span style="padding: 2px 4px; margin-right: 4px; color: #424242;">{token.lemma_}</span>'
+                    lemma_html += f'<span style="padding: 2px 4px; margin-right: 4px; color: #424242;">{lemma}</span>'
             
             st.markdown(lemma_html, unsafe_allow_html=True)
-            st.caption("Légende : Les mots surlignés en jaune ont été modifiés par la lemmatisation (ex: 'theories' → 'theory').")
+            st.caption("Légende : Les mots surlignés en jaune ont été modifiés par la lemmatisation (ex: 'computers' → 'computer').")
             
             st.subheader("3. POS Tagging")
             # Visualisation colorée des POS tags (Palette optimisée pour Vidéoprojecteur - Haut Contraste)
