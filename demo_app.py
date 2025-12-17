@@ -1,16 +1,29 @@
 import streamlit as st
 import pandas as pd
-import spacy
 import matplotlib.pyplot as plt
 import seaborn as sns
 from PIL import Image
 import os
 import re
-import pickle
 import altair as alt
 from collections import Counter
 import streamlit.components.v1 as components
 import json
+
+# Try to import spacy (optional for cloud deployment)
+try:
+    import spacy
+    SPACY_AVAILABLE = True
+except ImportError:
+    SPACY_AVAILABLE = False
+    spacy = None
+
+# Try to import pickle for TF-IDF (optional)
+try:
+    import pickle
+    PICKLE_AVAILABLE = True
+except ImportError:
+    PICKLE_AVAILABLE = False
 
 # Page Configuration
 st.set_page_config(
@@ -53,21 +66,27 @@ def load_data():
         return pd.read_csv('data.csv')
     return None
 
-# Load NLP Model (Cached)
+# Load NLP Model (Cached) - Optional
 @st.cache_resource
 def load_nlp():
+    if not SPACY_AVAILABLE:
+        return None
     try:
         return spacy.load("en_core_web_sm")
     except:
-        os.system("python -m spacy download en_core_web_sm")
-        return spacy.load("en_core_web_sm")
+        return None
 
-# Load TF-IDF Vectorizer (Cached)
+# Load TF-IDF Vectorizer (Cached) - Optional
 @st.cache_resource
 def load_tfidf():
+    if not PICKLE_AVAILABLE:
+        return None
     if os.path.exists('tfidf_vectorizer.pkl'):
-        with open('tfidf_vectorizer.pkl', 'rb') as f:
-            return pickle.load(f)
+        try:
+            with open('tfidf_vectorizer.pkl', 'rb') as f:
+                return pickle.load(f)
+        except:
+            return None
     return None
 
 # Get Word Frequencies for Word Cloud
@@ -292,111 +311,123 @@ with tab2:
 # Tab 3: Interactive Demo
 with tab3:
     st.header("Pipeline de Preprocessing en Temps Réel")
-    st.markdown("Testez le pipeline sur votre propre texte.")
     
-    user_input = st.text_area("Entrez une phrase en anglais:", "Quantum computers utilize quantum bits to perform quantum calculations much faster than classical computers can perform classical calculations.")
-    
-    if st.button("Traiter"):
-        cleaned, lemmatized, pos_tags, doc = process_text(user_input)
+    if not SPACY_AVAILABLE or nlp is None:
+        st.warning("⚠️ **Démo interactive indisponible en ligne**")
+        st.info("""
+        La démo interactive NLP nécessite la librairie **spaCy** qui n'est pas disponible sur ce serveur cloud.
         
-        st.subheader("1. Nettoyage")
-        st.code(cleaned, language="text")
+        **Pour tester cette fonctionnalité :**
+        1. Clonez le dépôt GitHub
+        2. Installez les dépendances : `pip install spacy && python -m spacy download en_core_web_sm`
+        3. Lancez l'app localement : `streamlit run demo_app.py`
+        """)
+    else:
+        st.markdown("Testez le pipeline sur votre propre texte.")
         
-        st.subheader("2. Lemmatization (Mots modifiés en évidence)")
+        user_input = st.text_area("Entrez une phrase en anglais:", "Quantum computers utilize quantum bits to perform quantum calculations much faster than classical computers can perform classical calculations.")
         
-        # Highlight lemmatization changes
-        lemma_html = ""
-        for token in doc:
-            if token.text != token.lemma_:
-                # Change detected: Highlight
-                lemma_html += f'<span style="background-color: #FFF9C4; color: #F57F17; padding: 2px 4px; border-radius: 4px; margin-right: 4px; border: 1px solid #FBC02D;" title="{token.text} → {token.lemma_}">{token.lemma_}</span>'
-            else:
-                # No change
-                lemma_html += f'<span style="padding: 2px 4px; margin-right: 4px; color: #424242;">{token.lemma_}</span>'
-        
-        st.markdown(lemma_html, unsafe_allow_html=True)
-        st.caption("Légende : Les mots surlignés en jaune ont été modifiés par la lemmatisation (ex: 'theories' → 'theory').")
-        
-        st.subheader("3. POS Tagging")
-        # Visualisation colorée des POS tags (Palette optimisée pour Vidéoprojecteur - Haut Contraste)
-        pos_html = ""
-        colors = {
-            "NOUN": "#1565C0",   # Bleu foncé
-            "VERB": "#2E7D32",   # Vert foncé
-            "ADJ": "#EF6C00",    # Orange vif
-            "ADV": "#7B1FA2",    # Violet
-            "PRON": "#00838F",   # Cyan foncé
-            "DET": "#424242",    # Gris foncé
-            "ADP": "#4E342E",    # Marron
-            "PROPN": "#C62828"   # Rouge
-        }
-        
-        for word, tag in pos_tags:
-            color_bg = colors.get(tag, "#616161")
-            pos_html += f'<span style="background-color: {color_bg}; color: white; padding: 4px 8px; border-radius: 4px; margin-right: 6px; font-weight: bold; display: inline-block; margin-bottom: 4px;">{word} <span style="font-size: 0.75em; opacity: 0.8; margin-left: 4px; text-transform: uppercase;">{tag}</span></span>'
-        
-        st.markdown(pos_html, unsafe_allow_html=True)
-        
-        # Legend
-        st.markdown("---")
-        st.caption("Légende: " + ", ".join([f"{k}" for k in colors.keys()]))
-
-        # TF-IDF Analysis
-        if vectorizer:
-            st.markdown("---")
-            st.subheader("4. Analyse TF-IDF (Mots Clés)")
+        if st.button("Traiter"):
+            cleaned, lemmatized, pos_tags, doc = process_text(user_input)
             
-            try:
-                # Transform input
-                if not lemmatized.strip():
-                     st.warning("Le texte est vide après nettoyage.")
+            st.subheader("1. Nettoyage")
+            st.code(cleaned, language="text")
+            
+            st.subheader("2. Lemmatization (Mots modifiés en évidence)")
+            
+            # Highlight lemmatization changes
+            lemma_html = ""
+            for token in doc:
+                if token.text != token.lemma_:
+                    # Change detected: Highlight
+                    lemma_html += f'<span style="background-color: #FFF9C4; color: #F57F17; padding: 2px 4px; border-radius: 4px; margin-right: 4px; border: 1px solid #FBC02D;" title="{token.text} → {token.lemma_}">{token.lemma_}</span>'
                 else:
-                    tfidf_vector = vectorizer.transform([lemmatized])
-                    feature_names = vectorizer.get_feature_names_out()
-                    
-                    # Extract non-zero values
-                    coo_matrix = tfidf_vector.tocoo()
-                    tuples = zip(coo_matrix.col, coo_matrix.data)
-                    sorted_items = sorted(tuples, key=lambda x: (x[1], x[0]), reverse=True)
-                    
-                    # Display results
-                    if sorted_items:
-                        st.write("Termes les plus significatifs (selon le modèle entraîné) :")
-                        
-                        top_terms = []
-                        for idx, score in sorted_items[:5]: # Top 5 terms
-                            term = feature_names[idx]
-                            top_terms.append({"Terme": term, "Score TF-IDF": round(score, 4)})
-                        
-                        df_tfidf = pd.DataFrame(top_terms)
-                        
-                        # Création d'un graphique à barres horizontal avec Altair
-                        chart = alt.Chart(df_tfidf).mark_bar().encode(
-                            x=alt.X('Score TF-IDF', title='Score TF-IDF'),
-                            y=alt.Y('Terme', sort='-x', title='Terme'),
-                            color=alt.Color('Score TF-IDF', scale=alt.Scale(scheme='blues'), legend=None),
-                            tooltip=['Terme', 'Score TF-IDF']
-                        ).properties(
-                            title='Top 5 Mots-Clés TF-IDF',
-                            height=300
-                        ).configure_axis(
-                            labelFontSize=14,
-                            titleFontSize=16
-                        ).configure_title(
-                            fontSize=18
-                        )
-                        
-                        st.altair_chart(chart, use_container_width=True)
-                        
-                        # Optionnel : Afficher aussi les données brutes dans un expander
-                        with st.expander("Voir les données brutes"):
-                            st.table(df_tfidf)
+                    # No change
+                    lemma_html += f'<span style="padding: 2px 4px; margin-right: 4px; color: #424242;">{token.lemma_}</span>'
+            
+            st.markdown(lemma_html, unsafe_allow_html=True)
+            st.caption("Légende : Les mots surlignés en jaune ont été modifiés par la lemmatisation (ex: 'theories' → 'theory').")
+            
+            st.subheader("3. POS Tagging")
+            # Visualisation colorée des POS tags (Palette optimisée pour Vidéoprojecteur - Haut Contraste)
+            pos_html = ""
+            colors = {
+                "NOUN": "#1565C0",   # Bleu foncé
+                "VERB": "#2E7D32",   # Vert foncé
+                "ADJ": "#EF6C00",    # Orange vif
+                "ADV": "#7B1FA2",    # Violet
+                "PRON": "#00838F",   # Cyan foncé
+                "DET": "#424242",    # Gris foncé
+                "ADP": "#4E342E",    # Marron
+                "PROPN": "#C62828"   # Rouge
+            }
+            
+            for word, tag in pos_tags:
+                color_bg = colors.get(tag, "#616161")
+                pos_html += f'<span style="background-color: {color_bg}; color: white; padding: 4px 8px; border-radius: 4px; margin-right: 6px; font-weight: bold; display: inline-block; margin-bottom: 4px;">{word} <span style="font-size: 0.75em; opacity: 0.8; margin-left: 4px; text-transform: uppercase;">{tag}</span></span>'
+            
+            st.markdown(pos_html, unsafe_allow_html=True)
+            
+            # Legend
+            st.markdown("---")
+            st.caption("Légende: " + ", ".join([f"{k}" for k in colors.keys()]))
+
+            # TF-IDF Analysis
+            if vectorizer:
+                st.markdown("---")
+                st.subheader("4. Analyse TF-IDF (Mots Clés)")
+                
+                try:
+                    # Transform input
+                    if not lemmatized.strip():
+                         st.warning("Le texte est vide après nettoyage.")
                     else:
-                        st.warning("Aucun terme connu du vocabulaire TF-IDF n'a été trouvé dans cette phrase.")
-            except Exception as e:
-                st.error(f"Erreur lors de l'analyse TF-IDF: {str(e)}")
-        else:
-            st.info("Modèle TF-IDF non chargé (fichier 'tfidf_vectorizer.pkl' manquant).")
+                        tfidf_vector = vectorizer.transform([lemmatized])
+                        feature_names = vectorizer.get_feature_names_out()
+                        
+                        # Extract non-zero values
+                        coo_matrix = tfidf_vector.tocoo()
+                        tuples = zip(coo_matrix.col, coo_matrix.data)
+                        sorted_items = sorted(tuples, key=lambda x: (x[1], x[0]), reverse=True)
+                        
+                        # Display results
+                        if sorted_items:
+                            st.write("Termes les plus significatifs (selon le modèle entraîné) :")
+                            
+                            top_terms = []
+                            for idx, score in sorted_items[:5]: # Top 5 terms
+                                term = feature_names[idx]
+                                top_terms.append({"Terme": term, "Score TF-IDF": round(score, 4)})
+                            
+                            df_tfidf = pd.DataFrame(top_terms)
+                            
+                            # Création d'un graphique à barres horizontal avec Altair
+                            chart = alt.Chart(df_tfidf).mark_bar().encode(
+                                x=alt.X('Score TF-IDF', title='Score TF-IDF'),
+                                y=alt.Y('Terme', sort='-x', title='Terme'),
+                                color=alt.Color('Score TF-IDF', scale=alt.Scale(scheme='blues'), legend=None),
+                                tooltip=['Terme', 'Score TF-IDF']
+                            ).properties(
+                                title='Top 5 Mots-Clés TF-IDF',
+                                height=300
+                            ).configure_axis(
+                                labelFontSize=14,
+                                titleFontSize=16
+                            ).configure_title(
+                                fontSize=18
+                            )
+                            
+                            st.altair_chart(chart, use_container_width=True)
+                            
+                            # Optionnel : Afficher aussi les données brutes dans un expander
+                            with st.expander("Voir les données brutes"):
+                                st.table(df_tfidf)
+                        else:
+                            st.warning("Aucun terme connu du vocabulaire TF-IDF n'a été trouvé dans cette phrase.")
+                except Exception as e:
+                    st.error(f"Erreur lors de l'analyse TF-IDF: {str(e)}")
+            else:
+                st.info("Modèle TF-IDF non chargé (fichier 'tfidf_vectorizer.pkl' manquant).")
 
 # Sidebar
 st.sidebar.title("Info Projet")
