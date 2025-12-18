@@ -183,12 +183,6 @@ Sur 17 151 tokens, la distribution est présentée en Figure \ref{fig:pos}. On n
     \item Génère des matrices très creuses (haute dimensionnalité).
 \end{itemize}
 
-\textbf{Exemple d'application du corpus :}
-Considérons la phrase suivante issue du dataset (en-doc6361-sent4) :
-\textit{"The study of logic led directly to the invention of the programmable digital electronic computer, based on the work of mathematician Alan Turing and others."}
-
-Après prétraitement (nettoyage, lemmatisation), les termes comme \textit{"programmable"}, \textit{"digital"}, \textit{"electronic"} et \textit{"computer"} reçoivent des scores TF-IDF élevés car ils sont spécifiques à ce document par rapport au reste du corpus, tandis que des mots comme \textit{"the"} ou \textit{"of"} ont un score proche de zéro.
-
 J'ai obtenu une matrice de \textbf{700 documents $\times$ 2493 features}.
 
 \textbf{Caractéristiques :}
@@ -214,6 +208,18 @@ La figure \ref{fig:tfidf} présente les termes aux scores TF-IDF les plus élev�
 
 \textbf{Interprétation} : La Figure \ref{fig:tfidf} montre que les termes ayant les scores TF-IDF les plus élevés restent des mots très courants de la langue anglaise ("the", "be", "of", "in"). Cela indique que ces termes sont présents dans une grande majorité des documents avec une fréquence élevée. Bien que le TF-IDF pénalise théoriquement les mots présents partout (IDF faible), leur fréquence brute (TF) est ici si importante qu'elle compense cette pénalité. Pour des tâches ultérieures plus fines, il serait pertinent d'envisager une liste de "stop words" plus agressive pour faire ressortir des termes plus spécifiques au domaine.
 
+
+\textbf{Exemple concret :}
+Prenons la phrase suivante du dataset (identifiant \texttt{en-doc6331-sent60}) relatant l'histoire du jeu vidéo \textit{Doom} :
+\begin{quote}
+"A retelling of the original Doom using entirely new graphics technology, Doom 3 was hyped to provide as large a leap in realism and interactivity as the original Doom, and helped renew interest in the Doom franchise when it was released."
+\end{quote}
+Pour ce document spécifique, l'analyse TF-IDF identifie les termes les plus pertinents suivants :
+\begin{itemize}
+    \item \textbf{doom} (score: 0.34) : Terme central et spécifique au sujet.
+    \item \textbf{original} (score: 0.24) : Qualifie la version du jeu.
+\end{itemize}
+Cela démontre la capacité du modèle à extraire les mots-clés thématiques malgré la présence de nombreux mots de liaison.
 
 \section{Analyse Critique des Choix}
 

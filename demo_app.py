@@ -5,6 +5,7 @@ import seaborn as sns
 from PIL import Image
 import os
 import re
+import random
 import altair as alt
 from collections import Counter
 import streamlit.components.v1 as components
@@ -35,6 +36,14 @@ if NLTK_AVAILABLE:
     from nltk.tokenize import word_tokenize
     from nltk.stem import WordNetLemmatizer
     from nltk import pos_tag
+
+@st.cache_resource
+def load_tfidf_vectorizer():
+    try:
+        with open('tfidf_vectorizer.pkl', 'rb') as f:
+            return pickle.load(f)
+    except Exception as e:
+        return None
 
 # Page Configuration
 st.set_page_config(
@@ -262,49 +271,73 @@ with tab2:
             st.info("Données POS non disponibles.")
 
     with col2:
-        st.subheader("Top Termes TF-IDF (Bar Chart)")
-        # Load TF-IDF data from JSON
-        tfidf_data = []
-        if os.path.exists('pos_tfidf_statistics.json'):
-            with open('pos_tfidf_statistics.json', 'r') as f:
-                stats = json.load(f)
-                tfidf_data = stats.get('tfidf_analysis', {}).get('top_10_terms', [])
+        st.subheader("🔍 Analyse TF-IDF par Document")
+        st.markdown("Découvrez les mots-clés extraits pour un document spécifique.")
         
-        if tfidf_data:
-            tfidf_data_json = json.dumps(tfidf_data)
-            bar_chart_html = f"""
-            <div id="barchart" style="width: 100%; height: 350px;"></div>
-            <script src="https://cdn.amcharts.com/lib/4/core.js"></script>
-            <script src="https://cdn.amcharts.com/lib/4/charts.js"></script>
-            <script src="https://cdn.amcharts.com/lib/4/themes/animated.js"></script>
-            <script>
-            am4core.useTheme(am4themes_animated);
-            var chart = am4core.create("barchart", am4charts.XYChart);
-            chart.data = {tfidf_data_json};
-            var categoryAxis = chart.yAxes.push(new am4charts.CategoryAxis());
-            categoryAxis.dataFields.category = "term";
-            categoryAxis.renderer.inversed = true;
-            categoryAxis.renderer.grid.template.location = 0;
-            categoryAxis.renderer.labels.template.fontSize = 12;
-            var valueAxis = chart.xAxes.push(new am4charts.ValueAxis());
-            valueAxis.min = 0;
-            valueAxis.title.text = "Score TF-IDF";
-            var series = chart.series.push(new am4charts.ColumnSeries());
-            series.dataFields.valueX = "tfidf_score";
-            series.dataFields.categoryY = "term";
-            series.columns.template.tooltipText = "{{categoryY}}: {{valueX}}";
-            series.columns.template.strokeOpacity = 0;
-            // Hover effect
-            series.columns.template.states.getKey("hover").properties.fillOpacity = 0.8;
-            series.columns.template.adapter.add("fill", function(fill, target) {{
-                return chart.colors.getIndex(target.dataItem.index);
-            }});
-            chart.cursor = new am4charts.XYCursor();
-            </script>
-            """
-            components.html(bar_chart_html, height=380)
+        # Charger le vectoriseur
+        vectorizer = load_tfidf_vectorizer()
+        
+        if vectorizer is None:
+            st.error("⚠️ Modèle TF-IDF non chargé (fichier 'tfidf_vectorizer.pkl' manquant).")
         else:
-            st.info("Données TF-IDF non disponibles.")
+            # Bouton pour choisir un document aléatoire
+            if st.button("🎲 Analyser un document au hasard"):
+                random_idx = random.randint(0, len(df)-1)
+                st.session_state['tfidf_doc_id'] = random_idx
+            
+            # Récupérer l'ID du document (par défaut : exemple Doom ou 0)
+            doc_idx = st.session_state.get('tfidf_doc_id', 19) # 19 is Mendeleev, or stick to random
+            
+            if 0 <= doc_idx < len(df):
+                row = df.iloc[doc_idx]
+                text = row['text']
+                st.info(f"📄 **Document #{row['id']}**\n\n> {text}")
+                
+                # Préparation du texte pour TF-IDF
+                # Utiliser la colonne lemmatized_text si elle existe (cas data_preprocessed.csv)
+                if 'lemmatized_text' in df.columns:
+                    lemmatized_input = row['lemmatized_text']
+                else:
+                    # Fallback si on a chargé data.csv brut (moins précis mais fonctionnel)
+                    lemmatized_input = text.lower() 
+                
+                try:
+                    # Transformation
+                    # Note: transform attend une liste/iterable
+                    tfidf_vector = vectorizer.transform([str(lemmatized_input)])
+                    feature_names = vectorizer.get_feature_names_out()
+                    
+                    # Extraction des tops termes
+                    coo = tfidf_vector.tocoo()
+                    # Trier par score décroissant
+                    sorted_items = sorted(zip(coo.col, coo.data), key=lambda x: (x[1], x[0]), reverse=True)
+                    
+                    top_n_data = []
+                    # On prend les top 10
+                    for idx, score in sorted_items[:10]:
+                        top_n_data.append({"Terme": feature_names[idx], "Score": score})
+                    
+                    if top_n_data:
+                        # Affichage Bar Chart avec Altair
+                        chart_df = pd.DataFrame(top_n_data)
+                        
+                        chart = alt.Chart(chart_df).mark_bar().encode(
+                            x=alt.X('Score', title="Score TF-IDF"),
+                            y=alt.Y('Terme', sort='-x', title="Terme"),
+                            color=alt.value('#FFA726'),
+                            tooltip=['Terme', 'Score']
+                        ).properties(
+                            title="Mots-clés les plus pertinents",
+                            height=300
+                        )
+                        st.altair_chart(chart, use_container_width=True)
+                    else:
+                        st.warning("Aucun terme significatif trouvé par le modèle (stopwords ?).")
+                        
+                except Exception as e:
+                    st.error(f"Erreur de calcul TF-IDF : {e}")
+            else:
+                st.error("Index de document invalide.")
         
         st.subheader("Impact du Preprocessing (Boxplot)")
         
@@ -354,7 +387,7 @@ with tab3:
     else:
         st.markdown("Testez le pipeline sur votre propre texte.")
         
-        user_input = st.text_area("Entrez une phrase en anglais:", "The study of logic led directly to the invention of the programmable digital electronic computer, based on the work of mathematician Alan Turing and others.")
+        user_input = st.text_area("Entrez une phrase en anglais:", "Quantum computers utilize quantum bits to perform quantum calculations much faster than classical computers can perform classical calculations.")
         
         if st.button("Traiter"):
             cleaned, lemmatized, pos_tags, lemmas = process_text_nltk(user_input)
