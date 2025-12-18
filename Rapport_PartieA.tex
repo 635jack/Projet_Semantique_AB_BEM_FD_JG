@@ -59,7 +59,7 @@ Jacques Gastebois\\
 
 
 \section{Introduction}
-Ce projet a pour dessein l'extraction de connaissances structurées à partir d'un corpus de textes non structurés. La première étape, cruciale, est le \textbf{preprocessing}, qui transforme les données brutes en un format exploitable.
+Ce projet a pour dessein l'extraction de connaissances structurées à partir d'un corpus de textes non structurés. La première étape, cruciale, est le \textbf{preprocessing}, qui transforme les données brutes en un format exploitable \cite{manning99}.
 Dans ce rapport, je présenterai le corpus et la méthodologie de preprocessing mise en œuvre. J'exposerai ensuite l'analyse statistique détaillée, incluant la distribution des \textbf{Part-of-Speech (POS)} et la vectorisation \textbf{TF-IDF}. Pour conclure, je justifierai mes choix techniques et leurs impacts sur la suite du projet.
 
 \subsection{Le Corpus}
@@ -87,7 +87,7 @@ J'ai développé le traitement en Python via un notebook Jupyter, selon les éta
     
     \item \textbf{Lemmatization (\texttt{lemmatized\_text})} :
     \begin{itemize}
-        \item Utilisation de la librairie \textbf{spaCy}.
+        \item Utilisation de la librairie \textbf{spaCy} \cite{spacy17}.
         \item Transformation des mots en leur forme canonique.
     \end{itemize}
     
@@ -169,7 +169,7 @@ Sur 17 151 tokens, la distribution est présentée en Figure \ref{fig:pos}. On n
 \end{figure}
 
 \subsection{Vectorisation TF-IDF}
-\textbf{Choix de la méthode} : Vectorisation \textbf{TF-IDF} (Term Frequency-Inverse Document Frequency).
+\textbf{Choix de la méthode} : Vectorisation \textbf{TF-IDF} (Term Frequency-Inverse Document Frequency) \cite{salton88}.
 
 \textbf{Avantages} :
 \begin{itemize}
@@ -259,5 +259,19 @@ L'extraction de relations bénéficie de la lemmatization qui normalise les verb
 
 \section{Conclusion}
 En conclusion, je ne ferai qu'insister sur le fait que le preprocessing réalisé est un compromis entre réduction de bruit et préservation de l'information. Ce socle de données enrichi est robuste et adapté aux défis que j'aurai à relever par la suite : la reconnaissance fine d'entités et l'extraction de relations.
+
+\section{Bibliographie}
+\begin{thebibliography}{9}
+
+\bibitem{salton88}
+Salton, G., \& Buckley, C. (1988). Term-weighting approaches in automatic text retrieval. \textit{Information processing \& management}, 24(5), 513-523.
+
+\bibitem{manning99}
+Manning, C. D., \& Schütze, H. (1999). \textit{Foundations of statistical natural language processing}. MIT press.
+
+\bibitem{spacy17}
+Honnibal, M., \& Montani, I. (2017). spaCy 2: Natural language understanding with Bloom embeddings, convolutional neural networks and incremental parsing. \textit{To appear}.
+
+\end{thebibliography}
 
 \end{document}
