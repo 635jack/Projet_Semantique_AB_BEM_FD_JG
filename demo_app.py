@@ -354,7 +354,7 @@ with tab3:
     else:
         st.markdown("Testez le pipeline sur votre propre texte.")
         
-        user_input = st.text_area("Entrez une phrase en anglais:", "Quantum computers utilize quantum bits to perform quantum calculations much faster than classical computers can perform classical calculations.")
+        user_input = st.text_area("Entrez une phrase en anglais:", "The study of logic led directly to the invention of the programmable digital electronic computer, based on the work of mathematician Alan Turing and others.")
         
         if st.button("Traiter"):
             cleaned, lemmatized, pos_tags, lemmas = process_text_nltk(user_input)
@@ -369,10 +369,10 @@ with tab3:
             for original, lemma in lemmas:
                 if original != lemma:
                     # Change detected: Highlight
-                    lemma_html += f'<span style="background-color: #FFF9C4; color: #F57F17; padding: 2px 4px; border-radius: 4px; margin-right: 4px; border: 1px solid #FBC02D;" title="{original} → {lemma}">{lemma}</span>'
+                    lemma_html += f'<span style="background-color: #FFF9C4; color: #F57F17; padding: 2px 4px; border-radius: 4px; margin-right: 4px; border: 1px solid #FBC02D;" title="{original} → {lemma}">{lemma}</span> '
                 else:
                     # No change
-                    lemma_html += f'<span style="padding: 2px 4px; margin-right: 4px; color: #424242;">{lemma}</span>'
+                    lemma_html += f'<span style="padding: 2px 4px; margin-right: 4px; color: #424242;">{lemma}</span> '
             
             st.markdown(lemma_html, unsafe_allow_html=True)
             st.caption("Légende : Les mots surlignés en jaune ont été modifiés par la lemmatisation (ex: 'computers' → 'computer').")
